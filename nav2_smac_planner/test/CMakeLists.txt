@@ -86,3 +86,14 @@ target_link_libraries(test_smac_2d
   ${library_name}_2d
 )
 
+# Test Parser 
+ament_add_gtest(test_parser 
+  test_parser.cpp)
+
+ament_target_dependencies(test_parser 
+ ${dependencies}
+)
+
+target_link_libraries(test_parser
+  ${library_name} )
+
