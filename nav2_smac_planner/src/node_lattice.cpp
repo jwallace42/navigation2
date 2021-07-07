@@ -21,17 +21,55 @@
 #include <queue>
 #include <limits>
 #include <string>
+#include <fstream>
 
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/DubinsStateSpace.h"
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
-
 #include "nav2_smac_planner/node_lattice.hpp"
 
 using namespace std::chrono;  // NOLINT
+using json = nlohmann::json;
 
 namespace nav2_smac_planner
 {
+
+void from_json_to_metaData(const json &j, LatticeMetadata &latticeMetaData)
+{
+    j.at("turningRadius").get_to(latticeMetaData.turningRadius);
+    j.at("stepDistance").get_to(latticeMetaData.stepDistance);
+    j.at("gridSeparation").get_to(latticeMetaData.gridSeparation);
+    j.at("maxLength").get_to(latticeMetaData.maxLength);
+    j.at("numberOfHeadings").get_to(latticeMetaData.numberOfHeadings);
+    j.at("outputFile").get_to(latticeMetaData.outputFile);
+    j.at("headingAngles").get_to(latticeMetaData.headingAngles);
+    j.at("numberOfTrajectories").get_to(latticeMetaData.numberOfTrajectories);
+}
+
+void from_json_to_pose(const json &j, MotionPose &pose)
+{
+    pose._x = j[0]; 
+    pose._y = j[1]; 
+    pose._theta = j[2];
+}
+
+void from_json_to_primitive(const json &j, Primitive &primitive)
+{
+    j.at("trajectoryId").get_to(primitive.trajectoryId);
+    j.at("startAngle").get_to(primitive.startAngle);
+    j.at("endAngle").get_to(primitive.endAngle);   
+    j.at("radius").get_to(primitive.radius);
+    j.at("trajectoryLength").get_to(primitive.trajectoryLength);
+    j.at("arcLength").get_to(primitive.arcLength);
+    j.at("straightLength").get_to(primitive.straightLength);
+
+    for(auto& jsonPose : j["poses"])
+    {
+        MotionPose pose;
+        from_json_to_pose(jsonPose, pose);
+        primitive.poses.push_back(pose);
+    }
+}
 
 // defining static member for all instance to share
 LatticeMotionTable NodeLattice::motion_table;
@@ -46,11 +84,11 @@ void LatticeMotionTable::initMotionModel(
   unsigned int & size_x_in,
   SearchInfo & search_info)
 {
-  size_x = size_x_in;
 
-  if (current_lattice_filepath == search_info.lattice_filepath) {
-    return;
-  }
+  //NOTE: Is this a projection against calling init motion model twice? 
+  // if (current_lattice_filepath == search_info.lattice_filepath) {
+  //   return;
+  // }
 
   size_x = size_x_in;
   change_penalty = search_info.change_penalty;
@@ -59,6 +97,42 @@ void LatticeMotionTable::initMotionModel(
   reverse_penalty = search_info.reverse_penalty;
   obstacle_heuristic_cost_weight = search_info.obstacle_heuristic_cost_weight;
   current_lattice_filepath = search_info.lattice_filepath;
+
+  std::ifstream latticeFile(current_lattice_filepath);
+
+  if( !latticeFile.is_open() )
+  {
+    throw std::runtime_error("Could not open output.json");
+  }
+
+  json j;
+  latticeFile >> j;
+
+  float prevStartAngle = 0; 
+  MotionPoses projections; 
+  for(auto const& primative : j["primitives"] )
+  {
+    Primitive newPrimitive; 
+    from_json_to_primitive(primative, newPrimitive); 
+
+    if(prevStartAngle != newPrimitive.startAngle )
+    {
+      //Found new bin 
+      angleToProjections[prevStartAngle] = projections; 
+      projections.clear(); 
+      prevStartAngle = newPrimitive.startAngle;
+    }
+
+    //Will be switched when output.json is updated 
+    projections.emplace_back(
+      newPrimitive.poses.back()._x,
+      newPrimitive.poses.back()._y,
+      newPrimitive.endAngle);
+  }
+  angleToProjections[prevStartAngle] = projections; 
+
+  //Populate the metadata 
+  from_json_to_metaData(j["latticeMetadata"], latticeMetadata);
 
   // TODO(Matt) read in file, precompute based on orientation bins for lookup at runtime
   // file is `search_info.lattice_filepath`, to be read in from plugin and provided here.
@@ -70,19 +144,70 @@ void LatticeMotionTable::initMotionModel(
 
   // TODO(Matt) populate num_angle_quantization, size_x, min_turning_radius, trig_values,
   // all of the member variables of LatticeMotionTable
+  min_turning_radius = latticeMetadata.turningRadius;
+  headingAngles = latticeMetadata.headingAngles; 
+  
+  // for(unsigned int i = 0; i< headingAngles.size(); ++i )
+  // {
+  //   angleToBin[headingAngles[i]] = i; 
+  // }
 }
 
 MotionPoses LatticeMotionTable::getProjections(const NodeLattice * node)
-{
-  return MotionPoses();  // TODO(Matt) lookup at run time the primitives to use at node
+{ 
+
+  MotionPoses projections; 
+
+  unsigned int size = angleToProjections[node->pose.theta].size(); 
+
+  //How to project against rounding error
+  if( size == 0 )
+  {
+    throw std::runtime_error("Zero size projections");
+  }
+
+  projections.reserve(angleToProjections[node->pose.theta].size() );
+
+  for(const auto& projection : angleToProjections[node->pose.theta])
+  {
+    const float new_heading = projection._theta + node->pose.theta;
+
+    //TODO(JOSH) Need to wrap between -180 and 180 
+
+    projections.emplace_back(
+      node->pose.x + projection._x,
+      node->pose.y + projection._y,
+      new_heading);
+  }
+
+  return projections;
 }
 
 LatticeMetadata LatticeMotionTable::getLatticeMetadata(const std::string & lattice_filepath)
 {
+  //NOTE: Josh: This is a little werid since the file has already been read in on cosntruction of the motion table 
+  
   // TODO(Matt) from this file extract and return the number of angle bins and
   // turning radius in global coordinates, respectively.
   // world coordinates meaning meters, not cells
-  return {0 /*num bins*/, 0 /*turning rad*/};
+  // return {0 /*num bins*/, 0 /*turning rad*/};
+
+  std::ifstream latticeFile(lattice_filepath);
+
+  if( !latticeFile.is_open() )
+  {
+    throw std::runtime_error("Could not open output.json"); 
+  }
+  
+  json j;
+  latticeFile >> j;
+
+  LatticeMetadata tempLatticeMetaData; 
+
+  //Populate the metadata 
+  from_json_to_metaData(j["latticeMetadata"], tempLatticeMetaData);
+
+  return tempLatticeMetaData;
 }
 
 NodeLattice::NodeLattice(const unsigned int index)
@@ -134,6 +259,7 @@ bool NodeLattice::isNodeValid(
 
 float NodeLattice::getTraversalCost(const NodePtr & child)
 {
+  
   return 0.0;  // TODO(josh): cost of different angles, changing, nonstraight, backwards, distance
 }
 

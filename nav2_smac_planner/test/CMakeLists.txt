@@ -87,13 +87,13 @@ target_link_libraries(test_smac_2d
 )
 
 # Test Parser 
-ament_add_gtest(test_parser 
-  test_parser.cpp)
+ament_add_gtest(test_lattice_node 
+  test_lattice_node.cpp)
 
-ament_target_dependencies(test_parser 
+ament_target_dependencies(test_lattice_node 
  ${dependencies}
 )
 
-target_link_libraries(test_parser
+target_link_libraries(test_lattice_node
   ${library_name} )
 

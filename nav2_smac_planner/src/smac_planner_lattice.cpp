@@ -112,9 +112,12 @@ void SmacPlannerLattice::configure(
   node->get_parameter(name + ".lookup_table_size", lookup_table_size);
 
   LatticeMetadata metadata = LatticeMotionTable::getLatticeMetadata(search_info.lattice_filepath);
-  _angle_quantizations = metadata.first;
+
+  //TODO: Josh: The logic with angles won't work because they are not equally spaced
+  _angle_quantizations = metadata.numberOfHeadings;
+
   _angle_bin_size = 2.0 * M_PI / static_cast<double>(_angle_quantizations);
-  float min_turning_radius = metadata.second;
+  float min_turning_radius = metadata.turningRadius;
 
   MotionModel motion_model = MotionModel::STATE_LATTICE;
 
@@ -130,6 +133,7 @@ void SmacPlannerLattice::configure(
     static_cast<float>(_costmap->getResolution() * _downsampling_factor);
 
   // Initialize collision checker
+  //TODO(JOSH): The collision check with need to take in the list of angular bins 
   _collision_checker = GridCollisionChecker(_costmap, _angle_quantizations);
   _collision_checker.setFootprint(
     costmap_ros->getRobotFootprint(),
@@ -137,6 +141,7 @@ void SmacPlannerLattice::configure(
     findCircumscribedCost(costmap_ros));
 
   // Initialize A* template
+  //TODO(JOSH): A star will need to take in the list of angular bins 
   _a_star = std::make_unique<AStarAlgorithm<NodeLattice>>(motion_model, search_info);
   _a_star->initialize(
     allow_unknown,
@@ -158,6 +163,8 @@ void SmacPlannerLattice::configure(
     _costmap_downsampler->on_configure(
       node, _global_frame, topic_name, _costmap, _downsampling_factor);
   }
+
+  //Read in lattice primatives 
 
   _raw_plan_publisher = node->create_publisher<nav_msgs::msg::Path>("unsmoothed_plan", 1);
 
@@ -222,9 +229,12 @@ nav_msgs::msg::Path SmacPlannerLattice::createPlan(
   // Set collision checker and costmap information
   _a_star->setCollisionChecker(&_collision_checker);
 
+  //TODO(JOSH) need to convert start and end pose to orientation bin 
   // Set starting point, in A* bin search coordinates
   unsigned int mx, my;
   costmap->worldToMap(start.pose.position.x, start.pose.position.y, mx, my);
+  
+  //TODO(JOSH) need to convert pose to a bin?
   double orientation_bin = tf2::getYaw(start.pose.orientation) / _angle_bin_size;
   while (orientation_bin < 0.0) {
     orientation_bin += static_cast<float>(_angle_quantizations);
@@ -233,6 +243,7 @@ nav_msgs::msg::Path SmacPlannerLattice::createPlan(
   _a_star->setStart(mx, my, orientation_bin_id);
 
   // Set goal point, in A* bin search coordinates
+  //TODO(JOSH) need to convert a pose to a bin? 
   costmap->worldToMap(goal.pose.position.x, goal.pose.position.y, mx, my);
   orientation_bin = tf2::getYaw(goal.pose.orientation) / _angle_bin_size;
   while (orientation_bin < 0.0) {

@@ -230,6 +230,7 @@ MotionPoses HybridMotionTable::getProjections(const NodeHybrid * node)
     const float & node_heading = node->pose.theta;
     float new_heading = node_heading + motion_model._theta;
 
+    
     if (new_heading >= num_angle_quantization_float) {
       new_heading -= num_angle_quantization_float;
     }
@@ -289,7 +290,7 @@ bool NodeHybrid::isNodeValid(
   {
     return false;
   }
-
+  
   _cell_cost = collision_checker->getCost();
   return true;
 }

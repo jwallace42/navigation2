@@ -12,21 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. Reserved.
 
-#include "nav2_smac_planner/motion_primative_parser.hpp"
+#include <fstream>
+
+#include "nav2_smac_planner/node_lattice.hpp"
 #include "gtest/gtest.h"
 
-TEST(ParserTest, test_parser)
+using json = nlohmann::json;
+
+
+TEST(ParserTest, test_lattice_node)
 {
     std::cout << "Starting" << std::endl; 
-    std::ifstream myJsonFile("/home/josh/nav2_ws/src/navigation2/nav2_smac_planner/test/output.json");
-    std::string line; 
+    std::string filePath = "/home/josh/nav2_ws/src/navigation2/nav2_smac_planner/test/output.json";
+    std::ifstream myJsonFile(filePath);
 
     ASSERT_TRUE(myJsonFile.is_open());
     json j; 
     myJsonFile >> j;
 
 
-    nav2_smac_planner::LatticeMetaData metaData; 
+    nav2_smac_planner::LatticeMetadata metaData; 
     nav2_smac_planner::Primitive myPrimitive; 
     nav2_smac_planner::MotionPose pose; 
 
@@ -71,4 +76,60 @@ TEST(ParserTest, test_parser)
     EXPECT_NEAR(myPrimitives[0].poses[1]._x, 0.06667, 0.01);
     EXPECT_NEAR(myPrimitives[0].poses[1]._y, 0.0, 0.01);
     EXPECT_NEAR(myPrimitives[0].poses[1]._theta, 0.0, 0.01);
+
+    nav2_smac_planner::SearchInfo info;
+    info.minimum_turning_radius = 1.2; 
+    info.non_straight_penalty = 1; 
+    info.change_penalty = 1; 
+    info.reverse_penalty = 1; 
+    info.cost_penalty = 1; 
+    info.analytic_expansion_ratio = 1; 
+    info.lattice_filepath = filePath;
+    info.cache_obstacle_heuristic = false; 
+    info.obstacle_heuristic_cost_weight = 1; 
+    unsigned int size_x = 100; 
+
+
+    // //Test neighbors for each bin 
+    // std::cout << "Init motion model" << std::endl; 
+    nav2_smac_planner::NodeLattice::initMotionModel(
+        nav2_smac_planner::MotionModel::STATE_LATTICE,
+        size_x,
+        size_x,
+        size_x,
+        info);
+
+    // std::cout << "Motion model inited" << std::endl; 
+    // //Create a dummy node to get projections
+    unsigned int index = 0; 
+    nav2_smac_planner::NodeLattice currentNode(index);
+    currentNode.setPose(nav2_smac_planner::NodeHybrid::Coordinates(0,0,0));
+
+    std::cout << "Getting projections" << std::endl; 
+    nav2_smac_planner::MotionPoses projections =  nav2_smac_planner::NodeLattice::motion_table.getProjections(&currentNode);
+    std::cout << "Got projections" << std::endl; 
+    for(const auto &projection : projections)
+    {
+        std::cout << projection._x << " ";
+        std::cout << projection._y << " "; 
+        std::cout << projection._theta << " "; 
+        std::cout << std::endl; 
+    }
+    currentNode.setPose(
+        nav2_smac_planner::NodeHybrid::Coordinates(
+            0.0f,
+            0.0f,
+            projections[1]._theta
+        )
+    );
+    projections = nav2_smac_planner::NodeLattice::motion_table.getProjections(&currentNode);
+    std::cout << " " << std::endl; 
+    for(const auto &projection : projections)
+    {
+        std::cout << projection._x << " ";
+        std::cout << projection._y << " "; 
+        std::cout << projection._theta << " "; 
+        std::cout << std::endl; 
+    }
+
 }

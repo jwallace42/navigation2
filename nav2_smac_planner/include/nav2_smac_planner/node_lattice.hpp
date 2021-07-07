@@ -25,6 +25,8 @@
 #include <utility>
 #include <limits>
 #include <string>
+#include <nlohmann/json.hpp>
+#include <map>
 
 #include "ompl/base/StateSpace.h"
 
@@ -32,15 +34,23 @@
 #include "nav2_smac_planner/types.hpp"
 #include "nav2_smac_planner/collision_checker.hpp"
 #include "nav2_smac_planner/node_hybrid.hpp"
+#include "nav2_smac_planner/lattice_types.hpp"
 
 namespace nav2_smac_planner
 {
+  void from_json_to_metaData(const nlohmann::json &j, LatticeMetadata &latticeMetaData);
+
+  void from_json_to_pose(const nlohmann::json &j, MotionPose &pose);
+
+  void from_json_to_primitive(const nlohmann::json &j, Primitive &primitive);
+
 
 // forward declare
 class NodeLattice;
 class NodeHybrid;
 
-typedef std::pair<unsigned int, double> LatticeMetadata;
+//NOTE: Removed for lattice meta data struct
+// typedef std::pair<unsigned int, double> LatticeMetadata;
 
 /**
  * @struct nav2_smac_planner::LatticeMotionTable
@@ -48,6 +58,7 @@ typedef std::pair<unsigned int, double> LatticeMetadata;
  */
 struct LatticeMotionTable
 {
+
   /**
    * @brief A constructor for nav2_smac_planner::LatticeMotionTable
    */
@@ -79,21 +90,26 @@ struct LatticeMotionTable
    * for use in analytic expansion and heuristic calculation.
    */
   static LatticeMetadata getLatticeMetadata(const std::string & lattice_filepath);
-
-  MotionPoses projections;
+  
   unsigned int size_x;
-  unsigned int num_angle_quantization;
-  float num_angle_quantization_float;
-  float min_turning_radius;
-  float bin_size;
   float change_penalty;
   float non_straight_penalty;
   float cost_penalty;
   float reverse_penalty;
   float obstacle_heuristic_cost_weight;
+  std::string current_lattice_filepath;
+
+  LatticeMetadata latticeMetadata;
+  // std::map<float, Primitives> binToPrimitives;
+  std::map<float, MotionPoses> angleToProjections;
+  unsigned int num_angle_quantization;
+  float num_angle_quantization_float;
+  float min_turning_radius;
+  float bin_size; //Needs to be replaced by bin sizes
+  std::vector<float> headingAngles;
+  std::map<float, unsigned int> angleToBin;  
   ompl::base::StateSpacePtr state_space;
   std::vector<TrigValues> trig_values;
-  std::string current_lattice_filepath;
 };
 
 /**
