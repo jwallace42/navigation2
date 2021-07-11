@@ -147,10 +147,10 @@ void LatticeMotionTable::initMotionModel(
   min_turning_radius = latticeMetadata.turningRadius;
   headingAngles = latticeMetadata.headingAngles; 
   
-  // for(unsigned int i = 0; i< headingAngles.size(); ++i )
-  // {
-  //   angleToBin[headingAngles[i]] = i; 
-  // }
+  for(unsigned int i = 0; i< headingAngles.size(); ++i )
+  {
+    angleToBin[headingAngles[i]] = i; 
+  }
 }
 
 MotionPoses LatticeMotionTable::getProjections(const NodeLattice * node)
@@ -160,7 +160,7 @@ MotionPoses LatticeMotionTable::getProjections(const NodeLattice * node)
 
   unsigned int size = angleToProjections[node->pose.theta].size(); 
 
-  //How to project against rounding error
+  //How to project against rounding error?
   if( size == 0 )
   {
     throw std::runtime_error("Zero size projections");
