@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Joshua Wallace
+// Copyright (c) 2018 Samsung Research America
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,17 +19,18 @@
 
 #include "nav2_behavior_tree/bt_action_node.hpp"
 #include "nav2_msgs/action/assisted_teleop.hpp"
-#include "nav2_msgs/action/back_up.hpp"
-
 
 namespace nav2_behavior_tree
 {
 
+/**
+ * @brief A nav2_behavior_tree::BtActionNode class that wraps nav2_msgs::action::Wait
+ */
 class AssistedTeleopAction : public BtActionNode<nav2_msgs::action::AssistedTeleop>
 {
 public:
   /**
-   * @brief A constructor for nav2_behavior_tree::BackUpAction
+   * @brief A constructor for nav2_behavior_tree::AssistedTeleopAction
    * @param xml_tag_name Name for the XML tag for this node
    * @param action_name Action name this node creates a client for
    * @param conf BT node configuration
@@ -38,7 +39,6 @@ public:
     const std::string & xml_tag_name,
     const std::string & action_name,
     const BT::NodeConfiguration & conf);
-
 
   /**
    * @brief Function to perform some user-defined operation on tick
@@ -53,10 +53,11 @@ public:
   {
     return providedBasicPorts(
       {
-        BT::InputPort<double>("duration", 1000, "Duration for action"),
+        BT::InputPort<int>("teleop_duration", 1, "teleop duration")
       });
   }
 };
-}
+
+}  // namespace nav2_behavior_tree
 
 #endif //NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__ASSISTED_TELEOP_ACTION_HPP_

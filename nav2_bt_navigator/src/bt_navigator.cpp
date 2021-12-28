@@ -37,6 +37,7 @@ BtNavigator::BtNavigator(const rclcpp::NodeOptions & options)
     "nav2_compute_path_to_pose_action_bt_node",
     "nav2_compute_path_through_poses_action_bt_node",
     "nav2_follow_path_action_bt_node",
+    "nav2_assisted_teleop_action_bt_node",
     "nav2_back_up_action_bt_node",
     "nav2_spin_action_bt_node",
     "nav2_wait_action_bt_node",

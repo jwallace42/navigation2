@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Intel Corporation
+// Copyright (c) 2018 Samsung Research America
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include <string>
 #include <memory>
 
 #include "nav2_behavior_tree/plugins/action/assisted_teleop_action.hpp"
-
 
 namespace nav2_behavior_tree
 {
@@ -29,15 +27,20 @@ AssistedTeleopAction::AssistedTeleopAction(
 : BtActionNode<nav2_msgs::action::AssistedTeleop>(xml_tag_name, action_name, conf)
 {
   int duration;
-  getInput("duration", duration);
+  getInput("teleop_duration", duration);
+  if (duration <= 0) {
+    RCLCPP_WARN(
+      node_->get_logger(), "Wait duration is negative or zero "
+      "(%i). Setting to positive.", duration);
+    duration *= -1;
+  }
 
   goal_.time.sec = duration;
-  goal_.time.nanosec = 0;
 }
 
 void AssistedTeleopAction::on_tick()
 {
-  RCLCPP_INFO(node_->get_logger(), "%s Ticking assisted_teleop action node", action_name_.c_str());
+  RCLCPP_WARN(node_->get_logger(), "on tick");
   increment_recovery_count();
 }
 
@@ -49,8 +52,7 @@ BT_REGISTER_NODES(factory)
   BT::NodeBuilder builder =
     [](const std::string & name, const BT::NodeConfiguration & config)
     {
-      return std::make_unique<nav2_behavior_tree::AssistedTeleopAction>(
-        name, "assisted_teleop", config);
+      return std::make_unique<nav2_behavior_tree::AssistedTeleopAction>(name, "assisted_teleop", config);
     };
 
   factory.registerBuilder<nav2_behavior_tree::AssistedTeleopAction>("AssistedTeleop", builder);

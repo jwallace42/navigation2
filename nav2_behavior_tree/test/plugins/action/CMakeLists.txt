@@ -5,6 +5,10 @@ ament_add_gtest(test_action_spin_action test_spin_action.cpp)
 target_link_libraries(test_action_spin_action nav2_spin_action_bt_node)
 ament_target_dependencies(test_action_spin_action ${dependencies})
 
+ament_add_gtest(test_action_assisted_teleop_action test_assisted_teleop_action.cpp)
+target_link_libraries(test_action_assisted_teleop_action nav2_assisted_teleop_action_bt_node)
+ament_target_dependencies(test_action_assisted_teleop_action ${dependencies})
+
 ament_add_gtest(test_action_back_up_action test_back_up_action.cpp)
 target_link_libraries(test_action_back_up_action nav2_back_up_action_bt_node)
 ament_target_dependencies(test_action_back_up_action ${dependencies})
