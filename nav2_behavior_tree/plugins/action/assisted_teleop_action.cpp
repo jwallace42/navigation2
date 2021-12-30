@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Samsung Research America
+// Copyright (c) 2022 Joshua Wallace
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,9 @@ BT_REGISTER_NODES(factory)
   BT::NodeBuilder builder =
     [](const std::string & name, const BT::NodeConfiguration & config)
     {
-      return std::make_unique<nav2_behavior_tree::AssistedTeleopAction>(name, "assisted_teleop", config);
+      return std::make_unique<nav2_behavior_tree::AssistedTeleopAction>(
+        name, "assisted_teleop",
+        config);
     };
 
   factory.registerBuilder<nav2_behavior_tree::AssistedTeleopAction>("AssistedTeleop", builder);
