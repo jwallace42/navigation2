@@ -1,0 +1,9 @@
+<!--
+  This Behavior only calls the assisted_teleop 
+-->
+
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <AssistedTeleop>
+  </BehaviorTree>
+</root>

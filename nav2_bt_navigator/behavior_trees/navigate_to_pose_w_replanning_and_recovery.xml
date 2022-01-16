@@ -35,7 +35,7 @@
           <Spin spin_dist="1.57"/>
           <Wait wait_duration="5"/>
           <BackUp backup_dist="0.15" backup_speed="0.025"/>
-          <AssistedTeleop/>
+          <AssistedTeleop teleop_duration="100"/>
         </RoundRobin>
       </ReactiveFallback>
     </RecoveryNode>
