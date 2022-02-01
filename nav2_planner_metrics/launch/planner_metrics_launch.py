@@ -21,25 +21,7 @@ def generate_launch_description():
         'planner_metric_params.yaml'
         )
 
-    # print(config)
-
-    # Create the launch description and populate 
-    ld = LaunchDescription()
-
-    start_map_server_cmd = Node(
-            package='nav2_map_server',
-            executable='map_server',
-            name='map_server',
-            output='screen',
-            parameters=[config]
-        )
-    
-    start_static_transform = Node(
-        package = 'tf2_ros',
-        executable = 'static_transform_publisher',
-        output = 'screen',
-        arguments = ["0", "0", "0", "0", "0", "0", "odom", "map"]
-    )
+    lifecycle_nodes = ['map_server']
 
     # start_planner_server = Node(
     #         package='nav2_planner',
@@ -49,11 +31,29 @@ def generate_launch_description():
     #         parameters=[config]
     # )
 
-    # Declare the launch options
-    # ld.add_action(declare_params_file_cmd)
+    return LaunchDescription([
+        Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='map_server',
+            output='screen',
+            parameters=[config]
+        ),
 
-    ld.add_action(start_map_server_cmd)
-    ld.add_action(start_static_transform)
-    # ld.add_action(start_planner_server)
+        Node(
+            package = 'tf2_ros',
+            executable = 'static_transform_publisher',
+            output = 'screen',
+            arguments = ["0", "0", "0", "0", "0", "0", "odom", "map"]
+        ),
 
-    return ld
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_localization',
+            output='screen',
+            parameters=[{'use_sim_time': True},
+                        {'autostart': True},
+                        {'node_names': lifecycle_nodes}])
+
+    ])
