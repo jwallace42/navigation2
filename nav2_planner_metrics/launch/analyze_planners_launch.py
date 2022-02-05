@@ -23,21 +23,21 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    warehouse_dir = get_package_share_directory('aws_robomaker_small_warehouse_world')
+    # warehouse_dir = get_package_share_directory('aws_robomaker_small_warehouse_world')
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
     python_commander_dir = get_package_share_directory('nav2_simple_commander')
 
-    map_yaml_file = os.path.join(warehouse_dir, 'maps', '005', 'map.yaml')
-    world = os.path.join(python_commander_dir, 'warehouse.world')
+    map_yaml_file = "/home/josh/nav2_ws/install/nav2_planner_metrics/share/nav2_planner_metrics/random_obs_map.yaml"
+    # world = os.path.join(python_commander_dir, 'warehouse.world')
 
     # start the simulation
     start_gazebo_server_cmd = ExecuteProcess(
-        cmd=['gzserver', '-s', 'libgazebo_ros_factory.so', world],
-        cwd=[warehouse_dir], output='screen')
+        cmd=['gzserver', '-s', 'libgazebo_ros_factory.so'],
+        output='screen')
 
     start_gazebo_client_cmd = ExecuteProcess(
         cmd=['gzclient'],
-        cwd=[warehouse_dir], output='screen')
+        output='screen')
 
     urdf = os.path.join(nav2_bringup_dir, 'urdf', 'turtlebot3_waffle.urdf')
     start_robot_state_publisher_cmd = Node(
@@ -67,9 +67,25 @@ def generate_launch_description():
         emulate_tty=True,
         output='screen')
 
+    static_transform_one = Node(
+            package = 'tf2_ros',
+            executable = 'static_transform_publisher',
+            output = 'screen',
+            arguments = ["0", "0", "0", "0", "0", "0", "base_link", "map"]
+        )
+
+    static_transform_two = Node(
+            package = 'tf2_ros',
+            executable = 'static_transform_publisher',
+            output = 'screen',
+            arguments = ["0", "0", "0", "0", "0", "0", "base_link", "odom"]
+        )
+
     ld = LaunchDescription()
-    ld.add_action(start_gazebo_server_cmd)
-    ld.add_action(start_gazebo_client_cmd)
+    ld.add_action(static_transform_one)
+    ld.add_action(static_transform_two)
+    # ld.add_action(start_gazebo_server_cmd)
+    # ld.add_action(start_gazebo_client_cmd)
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)
     ld.add_action(bringup_cmd)

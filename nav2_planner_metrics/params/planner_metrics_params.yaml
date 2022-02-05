@@ -1,0 +1,20 @@
+map_server:
+  ros__parameters:
+    use_sim_time: True
+    yaml_filename: "/home/josh/nav2_ws/install/nav2_planner_metrics/share/nav2_planner_metrics/random_obs_map.yaml"
+    topic_name: "map"
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 20.0
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+
+planner_server_rclcpp_node:
+  ros__parameters:
+    use_sim_time: True
