@@ -1,5 +1,5 @@
 from geometry_msgs.msg import PoseStamped
-from nav2_simple_commander.robot_navigator import BasicNavigator, NavigationResult
+from nav2_simple_commander.robot_navigator import BasicNavigator
 import rclpy
 from rclpy.node import Node
 from rclpy.duration import Duration
@@ -15,6 +15,7 @@ import matplotlib.pylab as plt
 
 def main():
     rclpy.init()
+    print("hello")
 
     navigator = BasicNavigator()
 
