@@ -157,7 +157,7 @@ bool Smoother::smoothImpl(
         cost = static_cast<float>(costmap->getCost(mx, my));
       }
 
-      if (cost > MAX_NON_OBSTACLE) {
+      if (cost > MAX_NON_OBSTACLE && cost != UNKNOWN) {
         RCLCPP_DEBUG(
           rclcpp::get_logger("SmacPlannerSmoother"),
           "Smoothing process resulted in an infeasible collision. "
@@ -173,7 +173,7 @@ bool Smoother::smoothImpl(
 
   // Lets do additional refinement, it shouldn't take more than a couple milliseconds
   // but really puts the path quality over the top.
-  if (do_refinement_ && refinement_ctr_ < 3) {
+  if (do_refinement_ && refinement_ctr_ < 4) {
     refinement_ctr_++;
     smoothImpl(new_path, reversing_segment, costmap, max_time);
   }
@@ -237,6 +237,16 @@ std::vector<PathSegment> Smoother::findDirectionalPathSegments(const nav_msgs::m
     // Checking for the existance of cusp, in the path, using the dot product.
     double dot_product = (oa_x * ab_x) + (oa_y * ab_y);
     if (dot_product < 0.0) {
+      curr_segment.end = idx;
+      segments.push_back(curr_segment);
+      curr_segment.start = idx;
+    }
+
+    // Checking for the existance of a differential rotation in place.
+    double cur_theta = tf2::getYaw(path.poses[idx].pose.orientation);
+    double next_theta = tf2::getYaw(path.poses[idx + 1].pose.orientation);
+    double dtheta = angles::shortest_angular_distance(cur_theta, next_theta);
+    if (fabs(ab_x) < 1e-4 && fabs(ab_y) < 1e-4 && fabs(dtheta) > 1e-4) {
       curr_segment.end = idx;
       segments.push_back(curr_segment);
       curr_segment.start = idx;
