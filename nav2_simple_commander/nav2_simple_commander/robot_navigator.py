@@ -267,8 +267,8 @@ class BasicNavigator(Node):
 
     def waitUntilNav2Active(self):
         """Block until the full navigation system is up and running."""
-        self._waitForNodeToActivate('amcl')
-        self._waitForInitialPose()
+        # self._waitForNodeToActivate('amcl')
+        # self._waitForInitialPose()
         self._waitForNodeToActivate('bt_navigator')
         self.info('Nav2 is ready for use!')
         return
@@ -301,7 +301,7 @@ class BasicNavigator(Node):
             self.warn(f'Getting path failed with status code: {self.status}')
             return None
 
-        return self.result_future.result().result.path
+        return self.result_future.result().result
 
     def getPathThroughPoses(self, start, goals):
         """Send a `ComputePathThroughPoses` action request."""
