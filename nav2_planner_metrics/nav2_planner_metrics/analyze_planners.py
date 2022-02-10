@@ -7,6 +7,7 @@ from rcl_interfaces.msg import ParameterValue, ParameterType, Parameter
 from rcl_interfaces.srv import SetParameters
 import time
 import math
+import os 
 
 #Data visualization 
 import numpy as np
@@ -20,7 +21,10 @@ from random import randint
 def getPlannerResults(navigator, initial_pose, goal_pose, planners):
     results = []
     for planner in planners:
-        results.append(navigator.getPath(initial_pose, goal_pose, planner))
+        path = navigator.getPath(initial_pose, goal_pose, planner)
+
+        if path is not None:
+            results.append(path)
     return results
 
 def getPaths(results):
@@ -41,26 +45,29 @@ def getPathLength(path):
         y_prev = y_curr
     return path_length
 
-def getMapCoordsFromPaths(paths, resolution):
+def getMapCoordsFromPaths(paths, resolution, map_origin):
     coords = []
     for path in paths:
         x = []
         y = []
         for pose in path.poses:
-            x.append(pose.pose.position.x/resolution + 5.0/resolution)
-            y.append(pose.pose.position.y/resolution + 10.0/resolution)
+            x.append(pose.pose.position.x/resolution + map_origin[0]/resolution)
+            y.append(pose.pose.position.y/resolution + map_origin[1]/resolution)
         coords.append(x)
         coords.append(y)
     return coords
 
-def getRandomGoals(num_of_goals, data):
-    seed(1)
+def getRandomGoals(num_of_goals, min_dist, data, res, map_origin):
     rand_goals = []
     while len(rand_goals) < num_of_goals:
-        row = randint(0, data.shape[0])
-        col = randint(0, data.shape[1])
-        if data[row,col] < 240:
-            rand_goals.append([row, col])
+        row = randint(10, data.shape[0]-10)
+        col = randint(10, data.shape[1]-10)
+
+        x_diff = col*res - map_origin[0]
+        y_diff = row*res - map_origin[1]
+        dist = math.sqrt( x_diff ** 2 + y_diff ** 2)
+        if data[row,col] < 210 and dist > min_dist:
+            rand_goals.append([col, row])
     return rand_goals
 
 # Important notes: need to remove the localization from the robot navigator
@@ -69,6 +76,7 @@ def main():
     print("hello")
 
     navigator = BasicNavigator()
+    map_origin = [5.0, 10.0] # Not sure how to get this out of the yaml 
 
     #Set initial pose
     initial_pose = PoseStamped()
@@ -87,14 +95,16 @@ def main():
     # If desired, you can change or load the map as well
     # navigator.changeMap('/path/to/map.yaml')
 
-    # Get the costmap for plotting
+    # Get the costmap for validating goals
     costmap = navigator.getGlobalCostmap()
     data = np.asarray(costmap.data)
     data.resize(costmap.metadata.size_y, costmap.metadata.size_x)
-    print(data.shape)
 
-    # Set our goal
-    rand_goals = getRandomGoals(10, data)
+    # Get random goals
+    seed(2)
+    goals = 100 
+    min_dist = 3.0
+    rand_goals = getRandomGoals(goals, min_dist, data, costmap.metadata.resolution, map_origin)
 
     
     #Get the paths for the following planners 
@@ -102,17 +112,21 @@ def main():
     results = [] 
     paths = []
 
+    count = 0
     for rand_goal in rand_goals:
+        count = count + 1
+        print(count, rand_goal)
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = navigator.get_clock().now().to_msg()
-        goal_pose.pose.position.x = rand_goal[1]*costmap.metadata.resolution
-        goal_pose.pose.position.y = rand_goal[0]*costmap.metadata.resolution
+        goal_pose.pose.position.x = rand_goal[0]*costmap.metadata.resolution - map_origin[0]
+        goal_pose.pose.position.y = rand_goal[1]*costmap.metadata.resolution - map_origin[1]
         goal_pose.pose.orientation.w = 1.0
         results = getPlannerResults(navigator, initial_pose, goal_pose, planners)
         paths = getPaths(results)
 
-    coords = getMapCoordsFromPaths(paths, costmap.metadata.resolution)
+    #Post proccessing, data needs to be stored for later
+    coords = getMapCoordsFromPaths(paths, costmap.metadata.resolution, map_origin)
         
 
     #Path lengths
@@ -120,42 +134,22 @@ def main():
     # for path in paths:
     #     path_lengths.append(getPathLength(path))
 
-    # plot the costmap
-    # time_ms = []
-    # for time in times:
-    #     time_ms.append(time.nanosec*0.000001)
-
-    #Bar chart for data 
-    # plt.figure(1)
-    # planners = ['NavFn', 'StateLattice', 'SmacPlanner2D', 'SmacPlannerHybrid']
-    # plt.bar(planners, time_ms)
-    # plt.xlabel('Planner type')
-    # plt.ylabel('Planner time (ms)')
-
-    # plt.figure(2)
-    # planners = ['NavFn', 'StateLattice', 'SmacPlanner2D', 'SmacPlannerHybrid']
-    # plt.bar(planners, path_length)
-    # plt.xlabel('Planner type')
-    # plt.ylabel('Path length (m)')
-    
-    # Plot paths 
-    #plot the cost 
-    data = np.where(data < 254, 0, data)
+    # Visualize the costmap better
     # data = np.where(data == 255, 512, data)
     # data = np.where(data == 254, 385, data)
+
+    #Plot results
+    data = np.where(data < 254, 0, data)
     data = data * -1
     plt.figure(3)
     ax = sns.heatmap(data, cbar=False)
-    color = (128/255, 128/255, 128/255)
-    ax.plot(coords[0],coords[1], 'r', linewidth=0.7)
-    ax.plot(coords[2],coords[3], 'b', linewidth=0.7)
-    ax.plot(coords[4],coords[5], 'g', linewidth=0.7)
-    ax.plot(coords[6],coords[7], linewidth=0.7)
-    ax.legend(['NavFn', 'StateLattice', 'SmacPlanner2D', 'SmacPlannerHybrid'])
+    for i in range(0, len(coords), 2):
+        ax.plot(coords[i], coords[i+1], linewidth=0.7)
+    ax.legend(planners)
     plt.axis('off')
     plt.show()
 
-
+    # Clean up 
     navigator.lifecycleShutdown()
     exit(0)
 
