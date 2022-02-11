@@ -2,6 +2,7 @@ from nav2_msgs.action import ComputePathToPose
 import numpy as np
 import seaborn as sns
 import matplotlib.pylab as plt
+import math
 
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -13,6 +14,13 @@ def getPaths(results):
         for path in result:
             paths.append(path.path)
     return paths
+
+def getTimes(results):
+    times = []
+    for result in results:
+        for time in result:
+            times.append(time.planning_time.nanosec)
+    return times
 
 def getMapCoordsFromPaths(paths, resolution, map_origin):
     coords = []
@@ -64,8 +72,39 @@ def main():
     with open(results_path, 'rb') as f:
         results = pickle.load(f)
 
+    # Path results
     paths = getPaths(results)
-    plotResults(costmap, paths, map_origin)
+    path_lengths = []
+    for path in paths:
+        path_lengths.append( getPathLength(path))
+    path_lengths = np.asarray(path_lengths)
+    print(len(path_lengths))
+    path_lengths = np.transpose(path_lengths)
+    path_lengths.resize((4,100))
+    path1 = np.average(path_lengths[0])
+    path2 = np.average(path_lengths[1])
+    path3 = np.average(path_lengths[2])
+    path4 = np.average(path_lengths[3])
+
+    # Time results 
+
+    times = getTimes(results)
+    times = np.asarray(times)
+    times = times * 0.000001; # convert nano to milli
+    times.resize((100,4))
+    times = np.transpose(times)
+    time1 = np.average(times[0])
+    time2 = np.average(times[1])
+    time3 = np.average(times[2])
+    time4 = np.average(times[3])
+
+    print(path1, time1)
+    print(path2, time2)
+    print(path3, time3)
+    print(path4, time4)
+    print(times[1])
+
+    # plotResults(costmap, paths, map_origin)
 
 if __name__ == '__main__':
     main()
