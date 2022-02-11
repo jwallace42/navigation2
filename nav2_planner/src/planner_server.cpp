@@ -391,8 +391,11 @@ PlannerServer::computePlanThroughPoses()
       }
 
       // Get plan from start -> goal
+      auto planning_start = steady_clock_.now();
       nav_msgs::msg::Path curr_path = getPlan(curr_start, curr_goal, goal->planner_id);
-
+      auto planning_duration = steady_clock_.now() - planning_start;
+      result->planning_time = planning_duration;
+      
       // check path for validity
       if (!validatePath(action_server_poses_, curr_goal, curr_path, goal->planner_id)) {
         return;
@@ -409,7 +412,7 @@ PlannerServer::computePlanThroughPoses()
     publishPlan(result->path);
 
     auto cycle_duration = steady_clock_.now() - start_time;
-    result->planning_time = cycle_duration;
+    // result->planning_time = cycle_duration;
 
     if (max_planner_duration_ && cycle_duration.seconds() > max_planner_duration_) {
       RCLCPP_WARN(

@@ -8,11 +8,12 @@ from rcl_interfaces.srv import SetParameters
 import time
 import math
 import os 
+import pickle
 
 #Data visualization 
 import numpy as np
-import seaborn as sns
-import matplotlib.pylab as plt
+# import seaborn as sns
+# import matplotlib.pylab as plt
 
 # generate random integer values
 from random import seed
@@ -27,36 +28,6 @@ def getPlannerResults(navigator, initial_pose, goal_pose, planners):
         if path is not None:
             results.append(path)
     return results
-
-def getPaths(results):
-    paths = [] 
-    for result in results:
-        paths.append(result.path)
-    return paths
-
-def getPathLength(path):
-    path_length = 0
-    x_prev = path.poses[0].pose.position.x
-    y_prev = path.poses[0].pose.position.y
-    for i in range(1, len(path.poses)):
-        x_curr = path.poses[i].pose.position.x
-        y_curr = path.poses[i].pose.position.y
-        path_length = path_length + math.sqrt((x_curr-x_prev)**2 + (y_curr-y_prev)**2)
-        x_prev = x_curr
-        y_prev = y_curr
-    return path_length
-
-def getMapCoordsFromPaths(paths, resolution, map_origin):
-    coords = []
-    for path in paths:
-        x = []
-        y = []
-        for pose in path.poses:
-            x.append(pose.pose.position.x/resolution + map_origin[0]/resolution)
-            y.append(pose.pose.position.y/resolution + map_origin[1]/resolution)
-        coords.append(x)
-        coords.append(y)
-    return coords
 
 def getRandomGoals(num_of_goals, min_dist, data, res, map_origin):
     rand_goals = []
@@ -95,18 +66,14 @@ def get_quaternion_from_euler(roll, pitch, yaw):
 # Important notes: need to remove the localization from the robot navigator
 def main():
     rclpy.init()
-    print("hello")
 
     navigator = BasicNavigator()
-    map_origin = [5.0, 10.0] # Not sure how to get this out of the yaml 
-
-    # quaternion = tf2_ros.transformations.quaternion_from_euler(0, 0, 0)
 
     #Set initial pose
     initial_pose = PoseStamped()
     initial_pose.header.frame_id = 'map'
     initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    # Why does this not set the initial pose correctly
+    # TODO(jwallace42): Why does this not set the initial pose correctly? Need to launch whole stack?
     initial_pose.pose.position.x = 0.0
     initial_pose.pose.position.y = 0.0
     initial_pose.pose.orientation.z = 1.0
@@ -129,12 +96,10 @@ def main():
     goals = 100 
     min_dist = 3.0
     rand_goals = getRandomGoals(goals, min_dist, data, costmap.metadata.resolution, map_origin)
-
     
-    #Get the paths for the following planners 
+    #Get the results for the following planners 
     planners = ['NavFn', 'SmacLattice', 'Smac2D', 'SmacHybrid']
     results = [] 
-    paths = []
 
     count = 0
     for rand_goal in rand_goals:
@@ -150,32 +115,17 @@ def main():
         goal_pose.pose.orientation.y = quad[1]
         goal_pose.pose.orientation.z = quad[2]
         goal_pose.pose.orientation.w = quad[3]
-        results = getPlannerResults(navigator, initial_pose, goal_pose, planners)
-        paths = getPaths(results)
+        results.append(getPlannerResults(navigator, initial_pose, goal_pose, planners))
 
-    #Post proccessing, data needs to be stored for later
-    coords = getMapCoordsFromPaths(paths, costmap.metadata.resolution, map_origin)
-        
 
-    #Path lengths
-    # path_lengths = []
-    # for path in paths:
-    #     path_lengths.append(getPathLength(path))
+    #Pickle data for post proccessing 
+    # TODO(jwallace42): need to write these files to the correct location
+    print("write with pickle")
+    with open('results.pickle', 'wb') as f:
+        pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
-    # Visualize the costmap better
-    # data = np.where(data == 255, 512, data)
-    # data = np.where(data == 254, 385, data)
-
-    #Plot results
-    data = np.where(data < 254, 0, data)
-    data = data * -1
-    plt.figure(3)
-    ax = sns.heatmap(data, cbar=False)
-    for i in range(0, len(coords), 2):
-        ax.plot(coords[i], coords[i+1], linewidth=0.7)
-    ax.legend(planners)
-    plt.axis('off')
-    plt.show()
+    with open('costmap.pickle', 'wb') as f:
+        pickle.dump(costmap, f, pickle.HIGHEST_PROTOCOL)
 
     # Clean up 
     navigator.lifecycleShutdown()
