@@ -286,7 +286,9 @@ bool PlannerServer::getStartPose(
   typename std::shared_ptr<const typename T::Goal> goal,
   geometry_msgs::msg::PoseStamped & start)
 {
-  if (goal->use_start) {
+  RCLCPP_WARN_STREAM(
+      get_logger(), "Use Start: " << goal->use_start);
+  if (true) {
     start = goal->start;
   } else if (!costmap_ros_->getRobotPose(start)) {
     action_server->terminate_current();
@@ -458,12 +460,14 @@ PlannerServer::computePlan()
       return;
     }
 
+
     // Transform them into the global frame
     geometry_msgs::msg::PoseStamped goal_pose = goal->goal;
     if (!transformPosesToGlobalFrame(action_server_pose_, start, goal_pose)) {
       return;
     }
 
+    RCLCPP_WARN_STREAM( get_logger(), "Starting Coord of path: " << start.pose.position.y);
     result->path = getPlan(start, goal_pose, goal->planner_id);
 
     if (!validatePath(action_server_pose_, goal_pose, result->path, goal->planner_id)) {
