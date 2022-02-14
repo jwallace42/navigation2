@@ -17,7 +17,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*')),
         (os.path.join('share', package_name), glob('params/*')),
-        (os.path.join('share', package_name), glob('maps/*'))
+        (os.path.join('share', package_name), glob('maps/*')),
+        (os.path.join('share', package_name), glob('data/*'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'analyze_planners = nav2_planner_metrics.analyze_planners:main',
+            'post_process_data = nav2_planner_metrics.post_proccess_data:main',
         ],
     },
 )
