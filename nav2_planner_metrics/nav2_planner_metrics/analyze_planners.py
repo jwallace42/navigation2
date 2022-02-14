@@ -10,6 +10,7 @@ import math
 import os 
 import pickle 
 import numpy as np
+from ament_index_python.packages import get_package_share_directory
 
 # generate random integer values
 from random import seed
@@ -152,14 +153,16 @@ def main():
             print("One of the planners was invalid")
 
     # # #Pickle data for post proccessing 
+
     print("Write Results...")
-    with open('/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/results.pickle', 'wb') as f:
+    nav2_planner_metrics_dir = get_package_share_directory('nav2_planner_metrics')
+    with open(os.path.join(nav2_planner_metrics_dir, 'results.pickle'),'wb') as f:
         pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
-    with open('/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/costmap.pickle', 'wb') as f:
+    with open(os.path.join(nav2_planner_metrics_dir, 'costmap.pickle'), 'wb') as f:
         pickle.dump(costmap, f, pickle.HIGHEST_PROTOCOL)
 
-    with open('/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/planners.pickle', 'wb') as f:
+    with open(os.path.join(nav2_planner_metrics_dir, 'planners.pickle'), 'wb') as f:
         pickle.dump(planners, f, pickle.HIGHEST_PROTOCOL)
 
     # Clean up 

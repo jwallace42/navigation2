@@ -66,17 +66,14 @@ def main():
     map_origin = [0.0, 0.0]
 
     nav2_planner_metrics_dir = get_package_share_directory('nav2_planner_metrics')
-    costmap_path = '/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/costmap.pickle'
-    results_path = '/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/results.pickle'
-    planners_path = '/home/josh/nav2_ws/src/navigation2/nav2_planner_metrics/data/planners.pickle'
 
-    with open(costmap_path, 'rb') as f:
+    with open(os.path.join(nav2_planner_metrics_dir, 'costmap.pickle'), 'rb') as f:
         costmap = pickle.load(f)
 
-    with open(results_path, 'rb') as f:
+    with open(os.path.join(nav2_planner_metrics_dir, 'results.pickle'), 'rb') as f:
         results = pickle.load(f)
     
-    with open(planners_path, 'rb') as f:
+    with open(os.path.join(nav2_planner_metrics_dir, 'planners.pickle'), 'rb') as f:
         planners = pickle.load(f) 
 
     print(planners)
