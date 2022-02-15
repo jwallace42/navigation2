@@ -76,8 +76,6 @@ def main():
     with open(os.path.join(nav2_planner_metrics_dir, 'planners.pickle'), 'rb') as f:
         planners = pickle.load(f) 
 
-    print(planners)
-
     paths = getPaths(results)
     path_lengths = []
 
@@ -86,14 +84,15 @@ def main():
     path_lengths = np.asarray(path_lengths)
     total_paths = len(paths)
 
+    path_lengths.resize((int(total_paths/len(planners)), len(planners)))
     path_lengths = np.transpose(path_lengths)
-    path_lengths.resize((len(planners), int(total_paths/len(planners))))
+    print(path_lengths.size)
 
     times = getTimes(results)
     times = np.asarray(times)
     times = times * 0.000001; # convert nano to milli
+    times.resize((int(total_paths/len(planners)), len(planners)))
     times = np.transpose(times)
-    times.resize((len(planners), int(total_paths/len(planners))))
 
     # Generate table
     planner_table = [['Planner', 'Average Path Length (m)', 'Average Time (ms)']]
@@ -102,7 +101,7 @@ def main():
 
     #Visualize results
     print(tabulate(planner_table))
-    plotResults(costmap, paths, map_origin)
+    # plotResults(costmap, paths, map_origin)
 
 if __name__ == '__main__':
     main()

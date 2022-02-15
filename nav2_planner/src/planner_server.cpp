@@ -465,7 +465,6 @@ PlannerServer::computePlan()
       return;
     }
 
-    RCLCPP_WARN_STREAM( get_logger(), "Starting Coord of path: " << start.pose.position.y);
     result->path = getPlan(start, goal_pose, goal->planner_id);
 
     if (!validatePath(action_server_pose_, goal_pose, result->path, goal->planner_id)) {

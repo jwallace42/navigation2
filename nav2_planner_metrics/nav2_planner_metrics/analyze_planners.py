@@ -1,3 +1,4 @@
+
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator
 import rclpy
@@ -5,6 +6,7 @@ from rclpy.node import Node
 from rclpy.duration import Duration
 from rcl_interfaces.msg import ParameterValue, ParameterType, Parameter
 from rcl_interfaces.srv import SetParameters
+
 import time
 import math
 import os 
@@ -12,7 +14,6 @@ import pickle
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
 
-# generate random integer values
 from random import seed
 from random import randint
 from random import uniform
@@ -138,11 +139,11 @@ def main():
     max_cost = 210
     side_buffer = 10
     # TODO (jwallace): SmacLattice causes segfaults..... Not sure why
-    # planners = ['NavFn', 'SmacLattice', 'Smac2D', 'SmacHybrid']
+    #planners = ['NavFn', 'SmacLattice', 'Smac2D', 'SmacHybrid']
     planners = ['NavFn', 'Smac2D', 'SmacHybrid']
-    seed(1)
+    seed(28) # 22 for 100by100 10%
     results = []
-    for i in range(50):
+    for i in range(1000):
         time_stamp = navigator.get_clock().now().to_msg()
         start = getRandomStart(costmap_data, max_cost, side_buffer, time_stamp, costmap.metadata.resolution, map_origin)
         goal = getRandomGoal(costmap_data, start, max_cost, side_buffer, time_stamp, costmap.metadata.resolution, map_origin)
@@ -151,8 +152,6 @@ def main():
             results.append(result)
         else:
             print("One of the planners was invalid")
-
-    # # #Pickle data for post proccessing 
 
     print("Write Results...")
     nav2_planner_metrics_dir = get_package_share_directory('nav2_planner_metrics')
