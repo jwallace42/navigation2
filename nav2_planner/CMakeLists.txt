@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(nav2_planner)
+add_compile_options(-g)
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
+add_compile_options(-g)
 find_package(ament_cmake REQUIRED)
 find_package(nav2_common REQUIRED)
 find_package(rclcpp REQUIRED)

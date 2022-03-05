@@ -208,6 +208,18 @@ bool NodeLattice::isNodeValid(
   MotionPrimitive * motion_primitive,
   bool is_backwards)
 {
+  // Check if end pose is inside the map
+  // if( this->pose.x < 1 || this->pose.x > 2000)
+  // {
+  //   return false;
+  // }
+
+  // if( this->pose.y < 1 || this->pose.y > 2000)
+  // {
+  //   return false;
+  // }
+  // std::cout << "X: " << this->pose.x << " " << "Y: " << this->pose.y << std::endl;
+
   // Check primitive end pose
   // Convert grid quantization of primitives to radians, then collision checker quantization
   static const double bin_size = 2.0 * M_PI / collision_checker->getPrecomputedAngles().size();

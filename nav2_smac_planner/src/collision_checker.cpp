@@ -80,12 +80,24 @@ void GridCollisionChecker::setFootprint(
   unoriented_footprint_ = footprint;
 }
 
+bool GridCollisionChecker::outsideRange(float min, unsigned int max, float value)
+{
+  return value < min || value > max;
+}
+
 bool GridCollisionChecker::inCollision(
   const float & x,
   const float & y,
   const float & angle_bin,
   const bool & traverse_unknown)
 {
+  // Check to make sure cell is inside the map
+  if (outsideRange(0, costmap_->getSizeInCellsX(), x) ||
+      outsideRange(0, costmap_->getSizeInCellsY(), y))
+  {
+    return false;
+  }
+
   // Assumes setFootprint already set
   double wx, wy;
   costmap_->mapToWorld(static_cast<double>(x), static_cast<double>(y), wx, wy);

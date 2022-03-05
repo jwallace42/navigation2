@@ -24,8 +24,8 @@ from ament_index_python.packages import get_package_share_directory
 import time
 
 import math
-import os 
-import pickle 
+import os
+import pickle
 import numpy as np
 
 from random import seed
@@ -71,7 +71,7 @@ def getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, res):
         row = randint(side_buffer, costmap.shape[0]-side_buffer)
         col = randint(side_buffer, costmap.shape[1]-side_buffer)
 
-        start_x = start.pose.position.x 
+        start_x = start.pose.position.x
         start_y = start.pose.position.y
         goal_x = col*res
         goal_y = row*res
@@ -115,44 +115,70 @@ def main():
     costmap = np.asarray(costmap_msg.data)
     costmap.resize(costmap_msg.metadata.size_y, costmap_msg.metadata.size_x)
 
-    planners = ['NavFn', 'SmacLattice', 'Smac2D', 'SmacHybrid', 'SBPL', 'OMPL']
+    planners = ['SmacLattice']
     max_cost = 210
-    side_buffer = 100
+    side_buffer = 5
     time_stamp = navigator.get_clock().now().to_msg()
     results = []
-    seed(33)
+    seed(10)
 
-    random_pairs = 100
-    for i in range(random_pairs):
-        print("Cycle: ", i, "out of: ",random_pairs)
-        start = getRandomStart(costmap, max_cost, side_buffer, time_stamp, costmap_msg.metadata.resolution)
-        goal = getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, costmap_msg.metadata.resolution)
-        print("Start", start)
-        print("Goal", goal)
-        result = getPlannerResults(navigator, start, goal, planners)
-        if len(result) == len(planners):  
-            results.append(result)
-        else:
-            print("One of the planners was invalid")
-    
+    # random_pairs = 2000
+    # for i in range(random_pairs):
+    #     print("Cycle: ", i, "out of: ",random_pairs)
+    #     start = getRandomStart(costmap, max_cost, side_buffer, time_stamp, costmap_msg.metadata.resolution)
+    #     goal = getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, costmap_msg.metadata.resolution)
+    #     print("Start", start)
+    #     print("Goal", goal)
+    #     result = getPlannerResults(navigator, start, goal, planners)
+    #     if len(result) == len(planners):
+    #         results.append(result)
+    #     else:
+    #         print("One of the planners was invalid")
+
+#     Start geometry_msgs.msg.PoseStamped(
+# header=std_msgs.msg.Header(stamp=builtin_interfaces.msg.Time(sec=1646423397, nanosec=611095826), frame_id='map'),
+# pose=geometry_msgs.msg.Pose(position=geometry_msgs.msg.Point(x=81.60000121593475, y=4.750000070780516, z=0.0),
+# orientation=geometry_msgs.msg.Quaternion(x=0.0, y=0.0, z=0.6569445041969872, w=0.7539389354618679)))
+
+# Goal geometry_msgs.msg.PoseStamped(header=std_msgs.msg.Header(stamp=builtin_interfaces.msg.Time(sec=1646423397, nanosec=611095826), frame_id='map'),
+# pose=geometry_msgs.msg.Pose(position=geometry_msgs.msg.Point(x=8.050000119954348, y=5.350000079721212, z=0.0),
+# orientation=geometry_msgs.msg.Quaternion(x=-0.0, y=0.0, z=0.22604035838923123, w=-0.9741179376129299)))
+
+
+    start = PoseStamped()
+    start.pose.position.x = 2.0
+    start.pose.position.y = 2.0
+    start.pose.orientation.w = 0.7539389354618679
+    start.pose.orientation.z = 0.6569445041969872
+    start.header.stamp = navigator.get_clock().now().to_msg()
+    start.header.frame_id = 'map'
+
+    goal = PoseStamped()
+    goal.pose.position.x = 98.0
+    goal.pose.position.y = 2.0
+    goal.pose.orientation.w = -0.9741179376129299
+    goal.pose.orientation.z = 0.22604035838923123
+    goal.header.stamp = navigator.get_clock().now().to_msg()
+    goal.header.frame_id = 'map'
+
     results = []
     result = getPlannerResults(navigator, start, goal, planners)
-    if len(result) == len(planners):  
+    if len(result) == len(planners):
         results.append(result)
     else:
         print("One of the planners was invalid")
 
-    print("Write Results...")
-    nav2_planner_metrics_dir = get_package_share_directory('nav2_planner_metrics')
-    with open(os.path.join(nav2_planner_metrics_dir, 'results.pickle'),'wb') as f:
-        pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
+    # print("Write Results...")
+    # nav2_planner_metrics_dir = get_package_share_directory('nav2_planner_metrics')
+    # with open(os.path.join(nav2_planner_metrics_dir, 'results.pickle'),'wb') as f:
+    #     pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(os.path.join(nav2_planner_metrics_dir, 'costmap.pickle'), 'wb') as f:
-        pickle.dump(costmap_msg, f, pickle.HIGHEST_PROTOCOL)
+    # with open(os.path.join(nav2_planner_metrics_dir, 'costmap.pickle'), 'wb') as f:
+    #     pickle.dump(costmap_msg, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(os.path.join(nav2_planner_metrics_dir, 'planners.pickle'), 'wb') as f:
-        pickle.dump(planners, f, pickle.HIGHEST_PROTOCOL)
-    print("Write Complete")
+    # with open(os.path.join(nav2_planner_metrics_dir, 'planners.pickle'), 'wb') as f:
+    #     pickle.dump(planners, f, pickle.HIGHEST_PROTOCOL)
+    # print("Write Complete")
 
     navigator.lifecycleShutdown()
     exit(0)
