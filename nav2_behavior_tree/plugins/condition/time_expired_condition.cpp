@@ -27,7 +27,8 @@ TimeExpiredCondition::TimeExpiredCondition(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
 : BT::ConditionNode(condition_name, conf),
-  period_(1.0)
+  period_(1.0),
+  first_time(true)
 {
   getInput("seconds", period_);
   node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
@@ -36,7 +37,9 @@ TimeExpiredCondition::TimeExpiredCondition(
 
 BT::NodeStatus TimeExpiredCondition::tick()
 {
-  if (status() == BT::NodeStatus::IDLE) {
+  if (first_time) {
+    first_time = false;
+    RCLCPP_INFO(node_->get_logger(), "FIRST TIME");
     start_ = node_->now();
     return BT::NodeStatus::FAILURE;
   }
@@ -48,9 +51,11 @@ BT::NodeStatus TimeExpiredCondition::tick()
   auto seconds = elapsed.seconds();
 
   if (seconds < period_) {
+    // std::cout << "Time expired: " << "Failure" << std::endl;
     return BT::NodeStatus::FAILURE;
   }
 
+  // std::cout << "Time expired: " << "Success" << std::endl;
   start_ = node_->now();  // Reset the timer
   return BT::NodeStatus::SUCCESS;
 }

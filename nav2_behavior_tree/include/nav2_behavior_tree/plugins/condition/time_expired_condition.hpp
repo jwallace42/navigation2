@@ -63,6 +63,7 @@ private:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Time start_;
   double period_;
+  bool first_time;
 };
 
 }  // namespace nav2_behavior_tree
