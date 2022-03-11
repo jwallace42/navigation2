@@ -74,6 +74,11 @@ public:
   bool isCollisionFree(
     const geometry_msgs::msg::Pose2D & pose,
     bool fetch_costmap_and_footprint = true);
+  // bool isCollisionFree(const geometry_msgs::msg::Pose2D & pose);
+  // /**
+  //  * @brief Returns costmap resolution
+  //  */
+  double getCostmapResolution();
 
 protected:
   /**
