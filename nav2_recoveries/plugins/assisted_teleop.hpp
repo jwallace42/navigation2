@@ -79,7 +79,6 @@ protected:
   // Logger
   rclcpp::Logger logger_{rclcpp::get_logger("nav2_recoveries")};
 
-
   /**
    * @brief Utility function to project robot pose
    * @param twist_speed linear speed of robot
