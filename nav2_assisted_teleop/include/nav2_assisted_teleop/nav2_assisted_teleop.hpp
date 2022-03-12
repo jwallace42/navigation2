@@ -16,10 +16,15 @@
 #ifndef NAV2_ASSISTED_TELEOP__NAV2__NAV2_ASSISTED_TELEOP_HPP_
 #define NAV2_ASSISTED_TELEOP__NAV2__NAV2_ASSISTED_TELEOP_HPP_
 
+
+#include <buffer.h>
+#include "tf2_ros/transform_listener.h"
+
 #include "nav2_util/lifecycle_node.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
+//#include <action message def>
 
 namespace nav2_assisted_teleop
 {
@@ -66,7 +71,7 @@ private:
    * @brief Callback function for the twist subcriber
    * @param msg twist message
    */
-  void twistCallback(const geometry_msgs::msg::Twist msg);
+  // void twistCallback(const geometry_msgs::msg::Twist msg);
 };
 
 /**
@@ -76,21 +81,60 @@ private:
  */
 class AssistedTeleopServer : public nav2_util::LifecycleNode
 {
-  public:
+public:
+  /**
+   * @brief A constructor for nav2_assisted_teleop::AssistedTeleopServer
+   * @param options Additional options to control creation of the node.
+   */
+  explicit AssistedTeleopServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
+  /**
+   * @brief Destructor for the nav2_assisted_teleop::AssistedTeleopServer
+   */
+  ~AssistedTeleopServer();
 
-  protected:
-    nav2_util::CallbackReturn on_configure(const rclcpp_lifecycle::State & state) override;
+protected:
+  /**
+   * @brief Configures assisted teleop params and member variable
+   */
+  nav2_util::CallbackReturn on_configure(const rclcpp_lifecycle::State & state) override;
 
-    nav2_util::CallbackReturn on_activate(const rclcpp_lifecycle::State & state) override;
+  nav2_util::CallbackReturn on_activate(const rclcpp_lifecycle::State & state) override;
 
-    nav2_util::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & state) override;
+  nav2_util::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & state) override;
 
-    nav2_util::CallbackReturn on_cleanup(const rclcpp_lifecycle::State & state) override;
+  nav2_util::CallbackReturn on_cleanup(const rclcpp_lifecycle::State & state) override;
 
-  private:
-    AssistedTeleop assisted_teleop;
+  /**
+   * @brief Callback function for velocity subscriber
+   * @param msg received Twist message
+   */
+  void velCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
+  /**
+   * @brief AssistedTeleop action server callback. Handles action server updates and
+   * spins server until goal is reached
+   *
+   * While this action is running, commands from joystick are filtered and then published to the base.
+   */
+  // TODO(jwallace42): not sure what a good name is
+  void execute();
+
+private:
+  AssistedTeleop assisted_teleop;
+
+  rclcpp::Logger logger_;
+
+  // Transforms
+  std::shared_ptr<tf2_ros::Buffer> tf_;
+  std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
+
+  // Sub/Pubs
+  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_sub_;
+
+  // Parameters
+  double projection_time_;
 };
 
 }
