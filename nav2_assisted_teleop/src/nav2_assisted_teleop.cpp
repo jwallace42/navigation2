@@ -25,7 +25,7 @@ namespace nav2_assisted_teleop
   {
     RCLCPP_INFO(logger_, "Creating assisted teleop server");
 
-    declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
+    // declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
   }
 
   AssistedTeleop::~AssistedTeleop()
@@ -36,117 +36,67 @@ namespace nav2_assisted_teleop
   nav2_util::CallbackReturn
   AssistedTeleopServer::on_configure(const rclcpp_lifecycle::State &)
   {
-    auto node_ = shared_from_this();
+    RCLCPP_INFO(logger_, "Configuring assisted_teleop_server");
+    // auto node = shared_from_this();
 
-    // Set up parameters
-    nav2_util::declare_parameter_if_not_declared(
-    node, "projection_time", rclcpp::ParameterValue(1.0));
+    // // Set up parameters
+    // nav2_util::declare_parameter_if_not_declared(
+    // node, "projection_time", rclcpp::ParameterValue(1.0));
+
+    // nav2_util::declare_parameter_if_not_declared(
+    //   this,
+    //   "input_vel_topic", rclcpp::ParameterValue(std::string("input_vel_topic")));
 
     // nav2_util::declare_parameter_if_not_declared(
     //   node,
-    //   "linear_velocity_threshold_", rclcpp::ParameterValue(0.06));
+    //   "output_vel_topic", rclcpp::ParameterValue(std::string("cmd_vel")));
 
-    nav2_util::declare_parameter_if_not_declared(
-      this,
-      "input_vel_topic", rclcpp::ParameterValue(std::string("input_vel_topic")));
+    // // Get parameters
+    // this->get_parameter("projection_time", projection_time_);
 
-    nav2_util::declare_parameter_if_not_declared(
-      node,
-      "output_vel_topic", rclcpp::ParameterValue(std::string("cmd_vel")));
-
-    // Get parameters
-    this->get_parameter("projection_time", projection_time_);
-
-    std::string input_vel_topic;
-    this->get_parameter("input_vel_topic", input_vel_topic);
-
-    std::string output_vel_topic;
-    this->get_parameter("output_vel_topic", output_vel_topic);
-
-    //     std::string input_vel_topic;
+    // std::string input_vel_topic;
     // this->get_parameter("input_vel_topic", input_vel_topic);
 
-    tf_ = std::make_shared<tf2_ros::Buffer>(get_clock());
-    auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
-      get_node_base_interface(), get_node_timers_interface());
-    tf_->setCreateTimerInterface(timer_interface);
-    transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_);
+    // std::string output_vel_topic;
+    // this->get_parameter("output_vel_topic", output_vel_topic);
 
-    // Initialize pubs & subs
-    vel_pub_ = create_publisher<geometry_msgs::msg::Twist>(output_vel_topic, 1);
+    // //     std::string input_vel_topic;
+    // // this->get_parameter("input_vel_topic", input_vel_topic);
+
+    // tf_ = std::make_shared<tf2_ros::Buffer>(get_clock());
+    // auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+    //   get_node_base_interface(), get_node_timers_interface());
+    // tf_->setCreateTimerInterface(timer_interface);
+    // transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_);
+
+    // // Initialize pubs & subs
+    // vel_pub_ = create_publisher<geometry_msgs::msg::Twist>(output_vel_topic, 1);
   }
+
+  nav2_util::CallbackReturn
+  AssistedTeleopServer::on_activate(const rclcpp_lifecycle::State & state)
+  {
+    RCLCPP_INFO(logger_, "Activating assisted_teleop_server");
+  }
+
+  nav2_util::CallbackReturn
+  AssistedTeleopServer::on_deactivate(const rclcpp_lifecycle::State & state)
+  {
+    RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
+  }
+
+  nav2_util::CallbackReturn
+  AssistedTeleopServer::on_cleanup(const rclcpp_lifecycle::State & state)
+  {
+    RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
+  }
+
+
 
 
   void AssistedTeleopServer::execute()
   {
     RCLCPP_INFO(logger_, "Running teleop action");
-  //   RCLCPP_INFO(logger_, "Attempting %s", recovery_name_.c_str());
 
-    auto node = node_.lock();
-    // Log a message every second
-    if (!node) {
-      throw std::runtime_error{"Failed to lock node"};
-    }
-
-  // auto timer = node->create_wall_timer(
-  //   1s,
-  //   [&]()
-  //   {RCLCPP_INFO(logger_, "%s running...", recovery_name_.c_str());});
-
-
-  // auto start_time = node->now();
-
-  // // Initialize the ActionT goal and result
-  // auto at_goal = action_server_->get_current_goal();
-  // auto result = std::make_shared<AssistedTeleopAction::Result>();
-
-  // rclcpp::WallRate loop_rate(cycle_frequency_);
-  // auto assisted_teleop_end_ = (node->now() + at_goal->time).nanoseconds();
-
-  // vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
-  //   input_vel_topic_, rclcpp::SystemDefaultsQoS(),
-  //   std::bind(
-  //     &AssistedTeleop::velCallback,
-  //     this, std::placeholders::_1));
-
-  // while (rclcpp::ok()) {
-  //   if (action_server_->is_cancel_requested()) {
-  //     RCLCPP_INFO(logger_, "Canceling %s", recovery_name_.c_str());
-  //     stopRobot();
-  //     vel_sub_.reset();
-  //     result->total_elapsed_time = node->now() - start_time;
-  //     action_server_->terminate_all(result);
-  //     return;
-  //   }
-
-  //   if (action_server_->is_preempt_requested()) {
-  //     RCLCPP_ERROR( "Received a preemption request for %s,"
-  //       " however feature is currently not implemented. Aborting and stopping.",
-  //       recovery_name_.c_str());
-  //     stopRobot();
-  //     vel_sub_.reset();
-  //     result->total_elapsed_time = node->now() - start_time;
-  //     action_server_->terminate_current(result);
-  //     return;
-  //   }
-
-  //   auto current_point = node->now().nanoseconds();
-
-  //   auto time_left =
-  //     assisted_teleop_end_ - current_point;
-
-  //   // Enable recovery behavior if we haven't run out of time
-  //   if (time_left < 0) {
-  //     vel_sub_.reset();
-  //     result->total_elapsed_time = node->now() - start_time;
-  //     action_server_->succeeded_current(result);
-  //     RCLCPP_INFO("%s completed successfully", recovery_name_.c_str());
-  //     return;
-  //   }
-  // }
-  // loop_rate.sleep();
   }
-
-
-
 }  // nav2_assisted_teleop
