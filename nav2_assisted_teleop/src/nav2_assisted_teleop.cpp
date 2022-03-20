@@ -28,10 +28,10 @@ namespace nav2_assisted_teleop
     // declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
   }
 
-  AssistedTeleop::~AssistedTeleop()
-  {
-    // do nothing
-  }
+  // AssistedTeleop::~AssistedTeleop()
+  // {
+  //   // do nothing
+  // }
 
   nav2_util::CallbackReturn
   AssistedTeleopServer::on_configure(const rclcpp_lifecycle::State &)
@@ -71,32 +71,53 @@ namespace nav2_assisted_teleop
 
     // // Initialize pubs & subs
     // vel_pub_ = create_publisher<geometry_msgs::msg::Twist>(output_vel_topic, 1);
+
+    action_server_ = std::make_unique<ActionServer>(
+    shared_from_this(),
+    "assisted_teleop",
+    std::bind(&AssistedTeleopServer::adjustVelocityIfInvalid, this),
+    nullptr,
+    std::chrono::milliseconds(500),
+    true);
+
+    return nav2_util::CallbackReturn::SUCCESS;
   }
 
   nav2_util::CallbackReturn
-  AssistedTeleopServer::on_activate(const rclcpp_lifecycle::State & state)
+  AssistedTeleopServer::on_activate(const rclcpp_lifecycle::State &)
   {
     RCLCPP_INFO(logger_, "Activating assisted_teleop_server");
+
+    action_server_->activate();
+
+    return nav2_util::CallbackReturn::SUCCESS;
   }
 
   nav2_util::CallbackReturn
-  AssistedTeleopServer::on_deactivate(const rclcpp_lifecycle::State & state)
+  AssistedTeleopServer::on_deactivate(const rclcpp_lifecycle::State &)
   {
     RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
+
+    return nav2_util::CallbackReturn::SUCCESS;
   }
 
   nav2_util::CallbackReturn
-  AssistedTeleopServer::on_cleanup(const rclcpp_lifecycle::State & state)
+  AssistedTeleopServer::on_cleanup(const rclcpp_lifecycle::State &)
   {
     RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
+
+    return nav2_util::CallbackReturn::SUCCESS;
   }
 
-
-
-
-  void AssistedTeleopServer::execute()
+  void AssistedTeleopServer::adjustVelocityIfInvalid()
   {
-    RCLCPP_INFO(logger_, "Running teleop action");
+    RCLCPP_INFO(logger_, "Called teleop action server");
 
+    auto start_time = steady_clock_.now();
+
+    auto result = std::make_shared<Action::Result>();
+
+    result->total_elapsed_time = start_time - steady_clock_.now();
+    action_server_->succeeded_current(result);
   }
 }  // nav2_assisted_teleop

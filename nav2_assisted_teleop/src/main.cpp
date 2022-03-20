@@ -14,18 +14,15 @@
 
 #include <memory>
 
-// #include "nav2_assisted_teleop/nav2_assisted_teleop.hpp"
+#include "nav2_assisted_teleop/nav2_assisted_teleop.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include <iostream>
+// #include <iostream>
 
-// int main(int argc, char ** argv)
-int main()
+int main(int argc, char ** argv)
 {
-  // rclcpp::init(argc, argv);
-  // auto node = std::make_shared<nav2_assisted_teleop::AssistedTeleopServer>();
-  // rclcpp::spin(node->get_node_base_interface());
-  // rclcpp::shutdown();
-  // return 0;
-
-  std::cout << "Hello server world" << std::endl;
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<nav2_assisted_teleop::AssistedTeleopServer>();
+  rclcpp::spin(node->get_node_base_interface());
+  rclcpp::shutdown();
+  return 0;
 }

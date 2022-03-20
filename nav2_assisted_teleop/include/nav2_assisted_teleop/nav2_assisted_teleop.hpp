@@ -17,14 +17,14 @@
 #define NAV2_ASSISTED_TELEOP__NAV2__NAV2_ASSISTED_TELEOP_HPP_
 
 
-#include <buffer.h>
+// #include <buffer.h>
 #include "tf2_ros/transform_listener.h"
 
 #include "nav2_util/lifecycle_node.hpp"
+#include "nav2_util/simple_action_server.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-
-//#include <action message def>
+#include "nav2_msgs/action/assisted_teleop.hpp"
 
 namespace nav2_assisted_teleop
 {
@@ -32,7 +32,7 @@ namespace nav2_assisted_teleop
 /**
  * @class nav2_assisted_teleop::AssistedTeleop
  * @brief This class contians the core functionality for
- * calculating the reduced/refined velocity command
+ * calculating the reduced/refined the teleop velocity command
  */
 class AssistedTeleop
 {
@@ -91,19 +91,36 @@ public:
   /**
    * @brief Destructor for the nav2_assisted_teleop::AssistedTeleopServer
    */
-  ~AssistedTeleopServer();
+  // ~AssistedTeleopServer();
 
 protected:
   /**
    * @brief Configures assisted teleop params and member variable
+   * @param state LifeCycle Node's state
+   * @return Success or Failure
    */
-  nav2_util::CallbackReturn on_configure(const rclcpp_lifecycle::State & state) override;
+  nav2_util::CallbackReturn on_configure(const rclcpp_lifecycle::State &) override;
 
-  nav2_util::CallbackReturn on_activate(const rclcpp_lifecycle::State & state) override;
+  /**
+   * @brief Activates assisted teleop server
+   * @param state LifeCycle Node's state
+   * @return Success or Failure
+   */
+  nav2_util::CallbackReturn on_activate(const rclcpp_lifecycle::State &) override;
 
-  nav2_util::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & state) override;
+  /**
+   * @brief Deactivates assisted teleop server
+   * @param state LifeCycle Node's state
+   * @return Success or Failure
+   */
+  nav2_util::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override;
 
-  nav2_util::CallbackReturn on_cleanup(const rclcpp_lifecycle::State & state) override;
+  /**
+   * @brief Calls cleanup on states and resets member variables
+   * @param state LifeCycle Node's state
+   * @return Success or Failure
+   */
+  nav2_util::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &) override;
 
   /**
    * @brief Callback function for velocity subscriber
@@ -118,15 +135,22 @@ protected:
    * While this action is running, commands from joystick are filtered and then published to the base.
    */
   // TODO(jwallace42): not sure what a good name is
-  void execute();
+  void adjustVelocityIfInvalid();
 
-private:
+  using Action = nav2_msgs::action::AssistedTeleop;
+  using ActionServer = nav2_util::SimpleActionServer<Action>;
+
+  // Action server that implements AssistedTeleop action
+  std::unique_ptr<ActionServer> action_server_;
+
+  // Helper class to make adjustments to velocity command
   AssistedTeleop assisted_teleop;
+
 
   rclcpp::Logger logger_;
 
   // Transforms
-  std::shared_ptr<tf2_ros::Buffer> tf_;
+  // std::shared_ptr<tf2_ros::Buffer> tf_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
 
   // Sub/Pubs
@@ -135,6 +159,8 @@ private:
 
   // Parameters
   double projection_time_;
+
+  rclcpp::Clock steady_clock_;
 };
 
 }

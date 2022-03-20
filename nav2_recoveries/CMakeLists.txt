@@ -71,13 +71,13 @@ ament_target_dependencies(nav2_wait_recovery
   ${dependencies}
 )
 
-add_library(nav2_assisted_teleop_recovery SHARED
-  plugins/assisted_teleop.cpp
-)
+# add_library(nav2_assisted_teleop_recovery SHARED
+#   plugins/assisted_teleop.cpp
+# )
 
-ament_target_dependencies(nav2_assisted_teleop_recovery
-  ${dependencies}
-)
+# ament_target_dependencies(nav2_assisted_teleop_recovery
+#   ${dependencies}
+# )
 
 pluginlib_export_plugin_description_file(nav2_core recovery_plugin.xml)
 
@@ -107,7 +107,7 @@ install(TARGETS ${library_name}
                 nav2_backup_recovery
                 nav2_spin_recovery
                 nav2_wait_recovery
-                nav2_assisted_teleop_recovery
+                # nav2_assisted_teleop_recovery
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
