@@ -23,7 +23,9 @@
 #include "nav2_util/lifecycle_node.hpp"
 #include "nav2_util/simple_action_server.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/pose2_d.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 #include "nav2_msgs/action/assisted_teleop.hpp"
 
 namespace nav2_assisted_teleop
@@ -51,20 +53,20 @@ public:
    * @param projected_time amount of time to project the pose by
    * @return geometry_msgs::msg::Pose the projected pose
    */
-  geometry_msgs::msg::Pose projectPose(geometry_msgs::msg::Pose pose,
+  geometry_msgs::msg::Pose2D projectPose(geometry_msgs::msg::Pose2D pose,
                                           geometry_msgs::msg::Twist twist,
-                                          double projected_time);
+                                          double projection_time);
 
   /**
    * @brief publish velocity to the base
    * @param twist velocity to publish
    */
-  void publishTwist(geometry_msgs::msg::Twist twist);
+  // void publishTwist(geometry_msgs::msg::Twist twist);
 
   /**
-   * @brief publish zero velocity
+   * @brief return zero speed
    */
-  void stop();
+  geometry_msgs::msg::Twist stop();
 
 private:
   /**
@@ -126,7 +128,13 @@ protected:
    * @brief Callback function for velocity subscriber
    * @param msg received Twist message
    */
-  void velCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+  void inputVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+
+  /**
+   * @brief Callback function for joy subscriber
+   * @param msg received Twist message
+   */
+  void joyCallback(const sensor_msgs::msg::Joy msg);
 
   /**
    * @brief AssistedTeleop action server callback. Handles action server updates and
@@ -156,6 +164,11 @@ protected:
   // Sub/Pubs
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
+
+  // Twist message
+  geometry_msgs::msg::Twist input_twist_;
+  sensor_msgs::msg::Joy joy_;
 
   // Parameters
   double projection_time_;

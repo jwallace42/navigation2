@@ -17,8 +17,48 @@
 #include "tf2_ros/create_timer_ros.h"
 #include "nav2_util/node_utils.hpp"
 
+#include <thread>
+
 namespace nav2_assisted_teleop
 {
+  geometry_msgs::msg::Twist AssistedTeleop::computeVelocity(geometry_msgs::msg::Twist twist)
+  {
+
+    geometry_msgs::msg::Twist adjusted_twist = twist;
+    //Get the current pose of the robot
+
+    //project the pose by dt(choose total projection time)
+    //Check if in collision
+    //Yes: scale velocity
+    //No: Do nothing
+
+    return adjusted_twist;
+  }
+
+  geometry_msgs::msg::Pose2D projectPose(geometry_msgs::msg::Pose2D pose,
+                                          geometry_msgs::msg::Twist twist,
+                                          double projection_time)
+  {
+    geometry_msgs::msg::Pose2D projected_pose;
+
+    projected_pose.x = projection_time * (
+                                twist.linear.x * cos(pose.theta) +
+                                twist.linear.y * sin(pose.theta));
+
+    projected_pose.x = projection_time * (
+                                twist.linear.x * sin(pose.theta) -
+                                twist.linear.y * cos(pose.theta));
+
+    projected_pose.theta = projection_time*twist.angular.z;
+
+    return projected_pose;
+  }
+
+  // geometry_msgs::msg::Twist stop()
+  // {
+  //   return geometry_msgs::msg::Twist();
+  // }
+
   AssistedTeleopServer::AssistedTeleopServer(const rclcpp::NodeOptions & options)
   : LifecycleNode("assisted_teleop_server", "", false, options),
   logger_(get_logger())
@@ -27,11 +67,6 @@ namespace nav2_assisted_teleop
 
     // declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
   }
-
-  // AssistedTeleop::~AssistedTeleop()
-  // {
-  //   // do nothing
-  // }
 
   nav2_util::CallbackReturn
   AssistedTeleopServer::on_configure(const rclcpp_lifecycle::State &)
@@ -69,8 +104,7 @@ namespace nav2_assisted_teleop
     // tf_->setCreateTimerInterface(timer_interface);
     // transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_);
 
-    // // Initialize pubs & subs
-    // vel_pub_ = create_publisher<geometry_msgs::msg::Twist>(output_vel_topic, 1);
+    // vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel_topic", 1);
 
     action_server_ = std::make_unique<ActionServer>(
     shared_from_this(),
@@ -80,6 +114,8 @@ namespace nav2_assisted_teleop
     std::chrono::milliseconds(500),
     true);
 
+    vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 1);
+
     return nav2_util::CallbackReturn::SUCCESS;
   }
 
@@ -87,7 +123,7 @@ namespace nav2_assisted_teleop
   AssistedTeleopServer::on_activate(const rclcpp_lifecycle::State &)
   {
     RCLCPP_INFO(logger_, "Activating assisted_teleop_server");
-
+    vel_pub_->on_activate();
     action_server_->activate();
 
     return nav2_util::CallbackReturn::SUCCESS;
@@ -98,6 +134,9 @@ namespace nav2_assisted_teleop
   {
     RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
 
+    vel_pub_->on_deactivate();
+    action_server_->deactivate();
+
     return nav2_util::CallbackReturn::SUCCESS;
   }
 
@@ -106,18 +145,97 @@ namespace nav2_assisted_teleop
   {
     RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
 
+    vel_pub_->on_activate();
+    action_server_->activate();
+
     return nav2_util::CallbackReturn::SUCCESS;
   }
 
   void AssistedTeleopServer::adjustVelocityIfInvalid()
   {
-    RCLCPP_INFO(logger_, "Called teleop action server");
+    vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
+    "/input_vel", rclcpp::SystemDefaultsQoS(),
+    std::bind(
+      &AssistedTeleopServer::inputVelocityCallback,
+      this, std::placeholders::_1));
+
+    joy_sub_ = create_subscription<sensor_msgs::msg::Joy>(
+    "/joy_topic", rclcpp::SystemDefaultsQoS(),
+    std::bind(
+      &AssistedTeleopServer::joyCallback,
+      this, std::placeholders::_1));
 
     auto start_time = steady_clock_.now();
 
     auto result = std::make_shared<Action::Result>();
+    rclcpp::WallRate loop_rate(10);
+    while (rclcpp::ok())
+    {
+      //Teleop was successful
+      if( joy_.buttons.size() > 0 && joy_.buttons[0] > 0)
+      {
+        vel_pub_->publish(geometry_msgs::msg::Twist());
+        vel_sub_.reset();
+        joy_sub_.reset();
+        result->total_elapsed_time = steady_clock_.now() - start_time;
+        action_server_->succeeded_current(result);
+        return;
+      }
 
-    result->total_elapsed_time = start_time - steady_clock_.now();
-    action_server_->succeeded_current(result);
+      //Teleop failed
+      if( joy_.buttons.size() > 1 && joy_.buttons[1] > 0)
+      {
+        vel_pub_->publish(geometry_msgs::msg::Twist());
+        vel_sub_.reset();
+        joy_sub_.reset();
+        result->total_elapsed_time = steady_clock_.now() - start_time;
+        action_server_->terminate_all(result);
+        return;
+      }
+
+      if(action_server_->is_cancel_requested())
+      {
+        vel_pub_->publish(geometry_msgs::msg::Twist());
+        vel_sub_.reset();
+        joy_sub_.reset();
+        result->total_elapsed_time = steady_clock_.now() -start_time;
+        action_server_->terminate_all(result);
+        return;
+      }
+
+      if (action_server_->is_preempt_requested()) {
+        vel_pub_->publish(geometry_msgs::msg::Twist());
+        vel_sub_.reset();
+        joy_sub_.reset();
+        result->total_elapsed_time = steady_clock_.now() - start_time;
+        action_server_->terminate_current(result);
+        return;
+      }
+
+      //Publish adjusted velocity
+      auto cmd_vel = std::make_unique<geometry_msgs::msg::Twist>();
+      cmd_vel->linear.x = input_twist_.linear.x;
+      cmd_vel->linear.y = input_twist_.linear.y;
+      cmd_vel->angular.z = 0.0;
+
+      vel_pub_->publish(std::move(cmd_vel));
+
+      loop_rate.sleep();
+    }
+  }
+
+  void AssistedTeleopServer::inputVelocityCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
+  {
+    RCLCPP_INFO(logger_, "Hit input Vel callback");
+
+    input_twist_.linear.x = msg->linear.x;
+    input_twist_.linear.y = msg->linear.y;
+    input_twist_.angular.z = msg->linear.z;
+  }
+
+  void AssistedTeleopServer::joyCallback(const sensor_msgs::msg::Joy msg)
+  {
+    RCLCPP_INFO(logger_, "Hit joy callback");
+    joy_.buttons = msg.buttons;
   }
 }  // nav2_assisted_teleop
