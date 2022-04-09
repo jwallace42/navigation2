@@ -17,16 +17,19 @@
 #define NAV2_ASSISTED_TELEOP__NAV2__NAV2_ASSISTED_TELEOP_HPP_
 
 
-// #include <buffer.h>
 #include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "tf2/utils.h"
 
-#include "nav2_util/lifecycle_node.hpp"
-#include "nav2_util/simple_action_server.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "sensor_msgs/msg/joy.hpp"
+#include "nav2_costmap_2d/costmap_topic_collision_checker.hpp"
 #include "nav2_msgs/action/assisted_teleop.hpp"
+#include "nav2_util/lifecycle_node.hpp"
+#include "nav2_util/robot_utils.hpp"
+#include "nav2_util/simple_action_server.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 
 namespace nav2_assisted_teleop
 {
@@ -39,13 +42,25 @@ namespace nav2_assisted_teleop
 class AssistedTeleop
 {
 public:
+
+  AssistedTeleop(rclcpp::Logger& logger);
+
+  /**
+   * @brief configure the assisted teleop
+   *
+   * @param node ros node handle
+   */
+  void on_configure(std::shared_ptr<nav2_util::LifecycleNode> node,
+                    std::shared_ptr<tf2_ros::Buffer> tf,
+                    std::shared_ptr<nav2_costmap_2d::CostmapTopicCollisionChecker> collision_checker);
   /**
    * @brief Reduce velocity if a collision is imminent
    * @param twist current speed
    * @return geometry_msgs::msg::Twist reduced velocity
    */
-  geometry_msgs::msg::Twist computeVelocity(geometry_msgs::msg::Twist twist);
+  geometry_msgs::msg::Twist computeVelocity(geometry_msgs::msg::Twist& twist);
 
+private:
   /**
    * @brief preform a linear projection of a pose
    * @param pose the pose to project
@@ -57,23 +72,18 @@ public:
                                           geometry_msgs::msg::Twist twist,
                                           double projection_time);
 
-  /**
-   * @brief publish velocity to the base
-   * @param twist velocity to publish
-   */
-  // void publishTwist(geometry_msgs::msg::Twist twist);
+  std::shared_ptr<tf2_ros::Buffer> tf_;
+  std::shared_ptr<nav2_costmap_2d::CostmapTopicCollisionChecker> collision_checker_;
 
-  /**
-   * @brief return zero speed
-   */
-  geometry_msgs::msg::Twist stop();
+  // params
+  double transform_tolerance_;
+  double projection_time_;
 
-private:
-  /**
-   * @brief Callback function for the twist subcriber
-   * @param msg twist message
-   */
-  // void twistCallback(const geometry_msgs::msg::Twist msg);
+  // frames
+  std::string global_frame_;
+  std::string robot_base_frame_;
+
+  rclcpp::Logger logger_;
 };
 
 /**
@@ -142,7 +152,6 @@ protected:
    *
    * While this action is running, commands from joystick are filtered and then published to the base.
    */
-  // TODO(jwallace42): not sure what a good name is
   void adjustVelocityIfInvalid();
 
   using Action = nav2_msgs::action::AssistedTeleop;
@@ -152,26 +161,35 @@ protected:
   std::unique_ptr<ActionServer> action_server_;
 
   // Helper class to make adjustments to velocity command
-  AssistedTeleop assisted_teleop;
-
-
   rclcpp::Logger logger_;
+  std::shared_ptr<AssistedTeleop> assisted_teleop_;
+
 
   // Transforms
-  // std::shared_ptr<tf2_ros::Buffer> tf_;
-  std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
+  std::shared_ptr<tf2_ros::Buffer> tf_;
+  // std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
 
   // Sub/Pubs
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
 
+  // costmap utils
+  std::shared_ptr<nav2_costmap_2d::CostmapSubscriber> costmap_sub_;
+  std::shared_ptr<nav2_costmap_2d::FootprintSubscriber> footprint_sub_;
+  std::shared_ptr<nav2_costmap_2d::CostmapTopicCollisionChecker> collision_checker_;
+
   // Twist message
   geometry_msgs::msg::Twist input_twist_;
   sensor_msgs::msg::Joy joy_;
 
   // Parameters
+  double transform_tolerance_;
   double projection_time_;
+  std::string input_vel_topic_;
+  std::string output_vel_topic_;
+  std::string joystick_topic_;
+  std::string robot_base_frame_;
 
   rclcpp::Clock steady_clock_;
 };

@@ -1,3 +1,4 @@
+
 // Copyright (c) 2021 Anushree Sabnis
 // Copyright (c) 2022 Joshua Wallace
 //
@@ -21,21 +22,74 @@
 
 namespace nav2_assisted_teleop
 {
-  geometry_msgs::msg::Twist AssistedTeleop::computeVelocity(geometry_msgs::msg::Twist twist)
+
+  AssistedTeleop::AssistedTeleop(rclcpp::Logger& logger) : logger_(logger)
+  {}
+
+  void AssistedTeleop::on_configure(std::shared_ptr<nav2_util::LifecycleNode> node,
+                    std::shared_ptr<tf2_ros::Buffer> tf,
+                    std::shared_ptr<nav2_costmap_2d::CostmapTopicCollisionChecker> collision_checker)
   {
+    // set up parameters
+    node->declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
 
-    geometry_msgs::msg::Twist adjusted_twist = twist;
-    //Get the current pose of the robot
+    nav2_util::declare_parameter_if_not_declared(
+    node, "projection_time", rclcpp::ParameterValue(1.0));
 
-    //project the pose by dt(choose total projection time)
-    //Check if in collision
-    //Yes: scale velocity
-    //No: Do nothing
+    node->get_parameter("global_frame", global_frame_);
+    node->get_parameter("robot_base_frame", robot_base_frame_);
 
+    // Note: empty frames don't cause robot_utils to error
+    // nav2_util::declare_parameter_if_not_declared(
+    //   node,
+    //   "global_frame", rclcpp::ParameterValue(std::string("global_frame")));
+
+    // nav2_util::declare_parameter_if_not_declared(
+    //   node,
+    //   "robot_base_frame", rclcpp::ParameterValue(std::string("robot_base_frame")));
+
+    tf_ = tf;
+    collision_checker_ = collision_checker;
+  }
+
+  geometry_msgs::msg::Twist AssistedTeleop::computeVelocity(geometry_msgs::msg::Twist& twist)
+  {
+    geometry_msgs::msg::PoseStamped current_pose;
+    if (!nav2_util::getCurrentPose(
+        current_pose, *tf_, global_frame_, robot_base_frame_,
+        transform_tolerance_))
+    {
+      RCLCPP_ERROR(logger_, "Failed to get current pose, setting velocity to zero");
+      return geometry_msgs::msg::Twist();
+    }
+
+    geometry_msgs::msg::Pose2D current_pose_2d;
+    current_pose_2d.x = current_pose.pose.position.x;
+    current_pose_2d.y = current_pose.pose.position.y;
+    current_pose_2d.theta = 0.0; //tf2::getYaw(current_pose.pose.orientation);
+
+    const double linear_vel = std::fabs(std::hypot(twist.linear.x, twist.linear.y));
+    const double dt = 0.05 / linear_vel;
+
+    geometry_msgs::msg::Pose2D projected_pose = current_pose_2d;
+    auto adjusted_twist = twist;
+    for(double current_time = 0; current_time < projection_time_; current_time+=dt)
+    {
+      projected_pose = projectPose(projected_pose, twist, dt);
+
+      if(!collision_checker_->isCollisionFree(projected_pose))
+      {
+        adjusted_twist.linear.x *= current_time / projection_time_;
+        adjusted_twist.linear.y *= current_time / projection_time_;
+        adjusted_twist.angular.z *= current_time / projection_time_;
+
+        RCLCPP_WARN_STREAM(logger_, "Collision approaching in " << current_time << ". Reducing velocity");
+      }
+    }
     return adjusted_twist;
   }
 
-  geometry_msgs::msg::Pose2D projectPose(geometry_msgs::msg::Pose2D pose,
+  geometry_msgs::msg::Pose2D AssistedTeleop::projectPose(geometry_msgs::msg::Pose2D pose,
                                           geometry_msgs::msg::Twist twist,
                                           double projection_time)
   {
@@ -54,67 +108,83 @@ namespace nav2_assisted_teleop
     return projected_pose;
   }
 
-  // geometry_msgs::msg::Twist stop()
-  // {
-  //   return geometry_msgs::msg::Twist();
-  // }
-
   AssistedTeleopServer::AssistedTeleopServer(const rclcpp::NodeOptions & options)
   : LifecycleNode("assisted_teleop_server", "", false, options),
-  logger_(get_logger())
+  logger_(get_logger()),
+  assisted_teleop_(std::make_shared<AssistedTeleop>(logger_))
   {
     RCLCPP_INFO(logger_, "Creating assisted teleop server");
-
-    // declare_parameter("transform_tolerance", rclcpp::ParameterValue(0.1));
   }
 
   nav2_util::CallbackReturn
   AssistedTeleopServer::on_configure(const rclcpp_lifecycle::State &)
   {
     RCLCPP_INFO(logger_, "Configuring assisted_teleop_server");
-    // auto node = shared_from_this();
 
-    // // Set up parameters
-    // nav2_util::declare_parameter_if_not_declared(
-    // node, "projection_time", rclcpp::ParameterValue(1.0));
+    auto node = shared_from_this();
 
-    // nav2_util::declare_parameter_if_not_declared(
-    //   this,
-    //   "input_vel_topic", rclcpp::ParameterValue(std::string("input_vel_topic")));
+    nav2_util::declare_parameter_if_not_declared(
+      this,
+      "input_vel_topic", rclcpp::ParameterValue(std::string("input_vel_topic")));
 
-    // nav2_util::declare_parameter_if_not_declared(
-    //   node,
-    //   "output_vel_topic", rclcpp::ParameterValue(std::string("cmd_vel")));
+    nav2_util::declare_parameter_if_not_declared(
+      node,
+      "output_vel_topic", rclcpp::ParameterValue(std::string("cmd_vel")));
 
-    // // Get parameters
-    // this->get_parameter("projection_time", projection_time_);
+    nav2_util::declare_parameter_if_not_declared(
+      node,
+      "joystick_topic", rclcpp::ParameterValue(std::string("joystick_topic")));
 
-    // std::string input_vel_topic;
-    // this->get_parameter("input_vel_topic", input_vel_topic);
+    declare_parameter(
+    "costmap_topic", rclcpp::ParameterValue(
+      std::string(
+        "global_costmap/costmap_raw")));
 
-    // std::string output_vel_topic;
-    // this->get_parameter("output_vel_topic", output_vel_topic);
+    declare_parameter(
+    "footprint_topic",
+    rclcpp::ParameterValue(
+      std::string("global_costmap/published_footprint")));
 
-    // //     std::string input_vel_topic;
-    // // this->get_parameter("input_vel_topic", input_vel_topic);
+    // get parameters
+    this->get_parameter("transform_tolerance", transform_tolerance_);
+    this->get_parameter("projection_time", projection_time_);
+    this->get_parameter("input_vel_topic", input_vel_topic_);
+    this->get_parameter("output_vel_topic", output_vel_topic_);
+    this->get_parameter("joystick_topic", joystick_topic_);
 
-    // tf_ = std::make_shared<tf2_ros::Buffer>(get_clock());
-    // auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
-    //   get_node_base_interface(), get_node_timers_interface());
-    // tf_->setCreateTimerInterface(timer_interface);
-    // transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_);
+    std::string costmap_topic, footprint_topic;
+    this->get_parameter("costmap_topic", costmap_topic);
+    this->get_parameter("footprint_topic", footprint_topic);
 
-    // vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel_topic", 1);
+    // setup transform manager
+    tf_ = std::make_shared<tf2_ros::Buffer>(get_clock());
+    auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+      get_node_base_interface(), get_node_timers_interface());
+    tf_->setCreateTimerInterface(timer_interface);
+
+    // setup collision checker
+    costmap_sub_ = std::make_shared<nav2_costmap_2d::CostmapSubscriber>(
+    shared_from_this(), costmap_topic);
+    footprint_sub_ = std::make_shared<nav2_costmap_2d::FootprintSubscriber>(
+    shared_from_this(), footprint_topic, *tf_, robot_base_frame_, transform_tolerance_);
+
+    collision_checker_ =
+    std::make_shared<nav2_costmap_2d::CostmapTopicCollisionChecker>(
+    *costmap_sub_, *footprint_sub_, this->get_name());
+
+
+    // TODO (jwallace42): node should be passed in as weakptr?
+    assisted_teleop_->on_configure(node, tf_, collision_checker_);
 
     action_server_ = std::make_unique<ActionServer>(
-    shared_from_this(),
-    "assisted_teleop",
-    std::bind(&AssistedTeleopServer::adjustVelocityIfInvalid, this),
-    nullptr,
-    std::chrono::milliseconds(500),
-    true);
+      shared_from_this(),
+      "assisted_teleop",
+      std::bind(&AssistedTeleopServer::adjustVelocityIfInvalid, this),
+      nullptr,
+      std::chrono::milliseconds(500),
+      true);
 
-    vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 1);
+    vel_pub_ = create_publisher<geometry_msgs::msg::Twist>(output_vel_topic_, 1);
 
     return nav2_util::CallbackReturn::SUCCESS;
   }
@@ -143,7 +213,7 @@ namespace nav2_assisted_teleop
   nav2_util::CallbackReturn
   AssistedTeleopServer::on_cleanup(const rclcpp_lifecycle::State &)
   {
-    RCLCPP_INFO(logger_, "Deactivating assisted_teleop_server");
+    RCLCPP_INFO(logger_, "Cleaning up assisted_teleop_server");
 
     vel_pub_->on_activate();
     action_server_->activate();
@@ -154,13 +224,13 @@ namespace nav2_assisted_teleop
   void AssistedTeleopServer::adjustVelocityIfInvalid()
   {
     vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
-    "/input_vel", rclcpp::SystemDefaultsQoS(),
+    input_vel_topic_, rclcpp::SystemDefaultsQoS(),
     std::bind(
       &AssistedTeleopServer::inputVelocityCallback,
       this, std::placeholders::_1));
 
     joy_sub_ = create_subscription<sensor_msgs::msg::Joy>(
-    "/joy_topic", rclcpp::SystemDefaultsQoS(),
+    joystick_topic_, rclcpp::SystemDefaultsQoS(),
     std::bind(
       &AssistedTeleopServer::joyCallback,
       this, std::placeholders::_1));
@@ -171,7 +241,8 @@ namespace nav2_assisted_teleop
     rclcpp::WallRate loop_rate(10);
     while (rclcpp::ok())
     {
-      //Teleop was successful
+      RCLCPP_INFO(logger_, "Running");
+      // user states that teleop was successful
       if( joy_.buttons.size() > 0 && joy_.buttons[0] > 0)
       {
         vel_pub_->publish(geometry_msgs::msg::Twist());
@@ -182,7 +253,7 @@ namespace nav2_assisted_teleop
         return;
       }
 
-      //Teleop failed
+      // user states that teleop failed
       if( joy_.buttons.size() > 1 && joy_.buttons[1] > 0)
       {
         vel_pub_->publish(geometry_msgs::msg::Twist());
@@ -193,6 +264,7 @@ namespace nav2_assisted_teleop
         return;
       }
 
+      // cancel request
       if(action_server_->is_cancel_requested())
       {
         vel_pub_->publish(geometry_msgs::msg::Twist());
@@ -203,6 +275,7 @@ namespace nav2_assisted_teleop
         return;
       }
 
+      // preempt request
       if (action_server_->is_preempt_requested()) {
         vel_pub_->publish(geometry_msgs::msg::Twist());
         vel_sub_.reset();
@@ -212,14 +285,11 @@ namespace nav2_assisted_teleop
         return;
       }
 
-      //Publish adjusted velocity
-      auto cmd_vel = std::make_unique<geometry_msgs::msg::Twist>();
-      cmd_vel->linear.x = input_twist_.linear.x;
-      cmd_vel->linear.y = input_twist_.linear.y;
-      cmd_vel->angular.z = 0.0;
+      geometry_msgs::msg::Twist cmd_vel;
+
+      cmd_vel = assisted_teleop_->computeVelocity(input_twist_);
 
       vel_pub_->publish(std::move(cmd_vel));
-
       loop_rate.sleep();
     }
   }
