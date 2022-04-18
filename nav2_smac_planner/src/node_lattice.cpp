@@ -567,11 +567,15 @@ bool NodeLattice::backtracePath(CoordinateVector & path)
         } else {
           prim_pose.theta = it->_theta;
         }
+        prim_pose.cost = current_node->getCost();
         path.push_back(prim_pose);
       }
     } else {
       // For analytic expansion nodes where there is no valid motion primitive
-      path.push_back(current_node->pose);
+      prim_pose.x = current_node->pose.x;
+      prim_pose.y = current_node->pose.y;
+      prim_pose.cost = current_node->getCost();
+      path.push_back(prim_pose);
       path.back().theta = NodeLattice::motion_table.getAngleFromBin(path.back().theta);
     }
 
