@@ -709,6 +709,7 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
     path.push_back(current_node->pose);
     // Convert angle to radians
     path.back().theta = NodeHybrid::motion_table.getAngleFromBin(path.back().theta);
+    path.back().cost = current_node->getCost();
     current_node = current_node->parent;
   }
 

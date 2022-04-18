@@ -157,7 +157,7 @@ public:
      * @param theta_in Theta coordinate
      */
     Coordinates(const float & x_in, const float & y_in, const float & theta_in)
-    : x(x_in), y(y_in), theta(theta_in)
+    : x(x_in), y(y_in), theta(theta_in), cost(0.0f)
     {}
 
     inline bool operator==(const Coordinates & rhs)
@@ -170,7 +170,7 @@ public:
       return !(*this == rhs);
     }
 
-    float x, y, theta;
+    float x, y, theta, cost;
   };
 
   typedef std::vector<Coordinates> CoordinateVector;
