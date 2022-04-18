@@ -164,8 +164,9 @@ bool Node2D::backtracePath(CoordinateVector & path)
   NodePtr current_node = this;
 
   while (current_node->parent) {
-    path.push_back(
-      Node2D::getCoords(current_node->getIndex()));
+    Coordinates current_cord = Node2D::getCoords(current_node->getIndex());
+    current_cord.cost = current_node->getCost();
+    path.emplace_back(current_cord);
     current_node = current_node->parent;
   }
 

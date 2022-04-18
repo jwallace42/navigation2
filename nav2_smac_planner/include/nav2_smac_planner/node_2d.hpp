@@ -51,10 +51,14 @@ public:
   {
     Coordinates() {}
     Coordinates(const float & x_in, const float & y_in)
-    : x(x_in), y(y_in)
+    : x(x_in), y(y_in), cost(0.0f)
     {}
 
-    float x, y;
+    Coordinates(const float & x_in, const float & y_in, const float &cost_in)
+    : x(x_in), y(y_in), cost(cost_in)
+    {}
+
+    float x, y, cost;
   };
   typedef std::vector<Coordinates> CoordinateVector;
 
