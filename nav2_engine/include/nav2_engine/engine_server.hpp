@@ -8,6 +8,7 @@
 #include "nav2_util/lifecycle_node.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "nav2_engine/muxer.hpp"
 
 namespace nav2_engine {
 
@@ -31,6 +32,8 @@ protected:
   nav2_util::CallbackReturn on_cleanup(const rclcpp_lifecycle::State & state) override;
 
   nav2_util::CallbackReturn on_shutdown(const rclcpp_lifecycle::State & state) override;
+
+  Muxer action_mux_;
 };
 
 } // nav2_engine
