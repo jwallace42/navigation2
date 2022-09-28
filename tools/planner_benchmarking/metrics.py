@@ -110,12 +110,12 @@ def main():
     costmap = np.asarray(costmap_msg.data)
     costmap.resize(costmap_msg.metadata.size_y, costmap_msg.metadata.size_x)
 
-    planners = ['Navfn', 'ThetaStar', 'SmacHybrid', 'Smac2d',  'SmacLattice']
+    planners = ['SmacHybrid', 'Smac2d',  'SmacLattice']
     max_cost = 210
     side_buffer = 100
     time_stamp = navigator.get_clock().now().to_msg()
     results = []
-    seed(33)
+    seed(1)
 
     random_pairs = 100
     res = costmap_msg.metadata.resolution
