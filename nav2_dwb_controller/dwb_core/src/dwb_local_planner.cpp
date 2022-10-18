@@ -133,9 +133,9 @@ void DWBLocalPlanner::configure(
     loadCritics();
   } catch (const std::exception & e) {
     RCLCPP_ERROR(logger_, "Couldn't load critics! Caught exception: %s", e.what());
-    throw nav2_core::ControllerException(
-            "Couldn't load critics! Caught exception: " +
-            std::string(e.what()));
+//    throw nav2_core::ControllerException(
+//            "Couldn't load critics! Caught exception: " +
+//            std::string(e.what()));
   }
 }
 
