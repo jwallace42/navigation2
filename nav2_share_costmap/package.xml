@@ -4,7 +4,7 @@
   <name>nav2_share_costmap</name>
   <version>0.0.0</version>
   <description>This costmap allows for direct costmap sharing.</description>
-  <maintainer email="josho.wallace.com">josh</maintainer>
+  <maintainer email="josho.wallace@gmail.com">Joshua Wallace</maintainer>
   <license>None</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -13,6 +13,7 @@
   <depend>nav2_planner</depend>
   <depend>nav2_controller</depend>
   <depend>nav2_behaviors</depend>
+  <depend>nav2_common</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
