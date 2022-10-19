@@ -24,6 +24,7 @@
 #include "pluginlib/class_loader.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include "nav2_core/behavior.hpp"
+#include "nav2_costmap_2d/costmap_2d_ros.hpp"
 
 #ifndef NAV2_BEHAVIORS__BEHAVIOR_SERVER_HPP_
 #define NAV2_BEHAVIORS__BEHAVIOR_SERVER_HPP_
@@ -42,7 +43,10 @@ public:
    * @brief A constructor for behavior_server::BehaviorServer
    * @param options Additional options to control creation of the node.
    */
-  explicit BehaviorServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+  explicit BehaviorServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> global_costmap,
+                          std::shared_ptr<nav2_costmap_2d::Costmap2DROS> local_costmap,
+                          const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+
   ~BehaviorServer();
 
   /**

@@ -17,7 +17,8 @@ int main(int argc, char ** argv)
 
   auto planner_node = std::make_shared<nav2_planner::PlannerServer>(global_costmap_ros_);
   auto controller_node = std::make_shared<nav2_controller::ControllerServer>(local_costmap_ros_);
-  auto behaviors_node = std::make_shared<behavior_server::BehaviorServer>();
+  auto behaviors_node = std::make_shared<behavior_server::BehaviorServer>(global_costmap_ros_,
+                                                                          local_costmap_ros_);
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(planner_node->get_node_base_interface());

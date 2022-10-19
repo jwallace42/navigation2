@@ -22,7 +22,9 @@
 namespace behavior_server
 {
 
-BehaviorServer::BehaviorServer(const rclcpp::NodeOptions & options)
+BehaviorServer::BehaviorServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> local_costmap,
+                               std::shared_ptr<nav2_costmap_2d::Costmap2DROS> global_costmap,
+const rclcpp::NodeOptions & options)
 : LifecycleNode("behavior_server", "", options),
   plugin_loader_("nav2_core", "nav2_core::Behavior"),
   default_ids_{"spin", "backup", "drive_on_heading", "wait"},
@@ -31,6 +33,9 @@ BehaviorServer::BehaviorServer(const rclcpp::NodeOptions & options)
     "nav2_behaviors/DriveOnHeading",
     "nav2_behaviors/Wait"}
 {
+
+  (void) local_costmap;
+  (void) global_costmap;
   declare_parameter(
     "costmap_topic",
     rclcpp::ParameterValue(std::string("local_costmap/costmap_raw")));
@@ -184,9 +189,9 @@ BehaviorServer::on_shutdown(const rclcpp_lifecycle::State &)
 
 }  // end namespace behavior_server
 
-#include "rclcpp_components/register_node_macro.hpp"
-
-// Register the component with class_loader.
-// This acts as a sort of entry point, allowing the component to be discoverable when its library
-// is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(behavior_server::BehaviorServer)
+//#include "rclcpp_components/register_node_macro.hpp"
+//
+//// Register the component with class_loader.
+//// This acts as a sort of entry point, allowing the component to be discoverable when its library
+//// is being loaded into a running process.
+//RCLCPP_COMPONENTS_REGISTER_NODE(behavior_server::BehaviorServer)

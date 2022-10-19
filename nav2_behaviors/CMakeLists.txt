@@ -18,6 +18,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
 find_package(nav2_core REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
 
 nav2_package()
 
@@ -44,6 +45,7 @@ set(dependencies
   nav2_costmap_2d
   nav2_core
   pluginlib
+  nav2_costmap_2d
 )
 
 # plugins
@@ -99,15 +101,15 @@ ament_target_dependencies(${library_name}
 )
 
 # Executable
-add_executable(${executable_name}
-  src/main.cpp
-)
+#add_executable(${executable_name}
+#  src/main.cpp
+#)
+#
+#target_link_libraries(${executable_name} ${library_name})
 
-target_link_libraries(${executable_name} ${library_name})
-
-ament_target_dependencies(${executable_name}
-  ${dependencies}
-)
+#ament_target_dependencies(${executable_name}
+#  ${dependencies}
+#)
 
 rclcpp_components_register_nodes(${library_name} "behavior_server::BehaviorServer")
 
@@ -122,9 +124,9 @@ install(TARGETS ${library_name}
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS ${executable_name}
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+#install(TARGETS ${executable_name}
+#  RUNTIME DESTINATION lib/${PROJECT_NAME}
+#)
 
 install(DIRECTORY include/
   DESTINATION include/
