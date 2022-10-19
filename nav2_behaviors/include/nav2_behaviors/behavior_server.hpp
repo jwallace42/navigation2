@@ -96,6 +96,9 @@ protected:
   std::unique_ptr<nav2_costmap_2d::CostmapSubscriber> costmap_sub_;
   std::unique_ptr<nav2_costmap_2d::FootprintSubscriber> footprint_sub_;
   std::shared_ptr<nav2_costmap_2d::CostmapTopicCollisionChecker> collision_checker_;
+
+  std::shared_ptr<nav2_costmap_2d::Costmap2DROS> global_costmap_ros_;
+  std::shared_ptr<nav2_costmap_2d::Costmap2DROS> local_costmap_ros_;
 };
 
 }  // namespace behavior_server

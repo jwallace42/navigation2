@@ -33,9 +33,6 @@ const rclcpp::NodeOptions & options)
     "nav2_behaviors/DriveOnHeading",
     "nav2_behaviors/Wait"}
 {
-
-  (void) local_costmap;
-  (void) global_costmap;
   declare_parameter(
     "costmap_topic",
     rclcpp::ParameterValue(std::string("local_costmap/costmap_raw")));
@@ -61,6 +58,12 @@ const rclcpp::NodeOptions & options)
   declare_parameter(
     "transform_tolerance",
     rclcpp::ParameterValue(0.1));
+
+  (void) global_costmap;
+  (void) local_costmap;
+
+//  global_costmap_ros_ = global_costmap;
+//  local_costmap_ros_ = local_costmap;
 }
 
 

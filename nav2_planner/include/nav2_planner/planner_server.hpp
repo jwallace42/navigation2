@@ -55,7 +55,7 @@ public:
    * @brief A constructor for nav2_planner::PlannerServer
    * @param options Additional options to control creation of the node.
    */
-  explicit PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+  explicit PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> global_costmap_ros,
                          const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
   /**
    * @brief A destructor for nav2_planner::PlannerServer

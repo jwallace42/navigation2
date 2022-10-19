@@ -39,7 +39,7 @@ using std::placeholders::_1;
 namespace nav2_planner
 {
 
-PlannerServer::PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+PlannerServer::PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> global_costmap_ros,
                              const rclcpp::NodeOptions & options)
 : nav2_util::LifecycleNode("planner_server", "", options),
   gp_loader_("nav2_core", "nav2_core::GlobalPlanner"),
@@ -47,8 +47,6 @@ PlannerServer::PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> cost
   default_types_{"nav2_navfn_planner/NavfnPlanner"},
   costmap_(nullptr)
 {
-  (void) costmap;
-
   RCLCPP_INFO(get_logger(), "Creating");
 
   // Declare this node's parameters
@@ -63,9 +61,11 @@ PlannerServer::PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> cost
   }
 
   // Setup the global costmap
-  costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>(
-    "global_costmap", std::string{get_namespace()}, "global_costmap",
-    get_parameter("use_sim_time").as_bool());
+//  costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>(
+//    "global_costmap", std::string{get_namespace()}, "global_costmap",
+//    get_parameter("use_sim_time").as_bool());
+  costmap_ros_ = global_costmap_ros;
+
   // Launch a thread to run the costmap node
   costmap_thread_ = std::make_unique<nav2_util::NodeThread>(costmap_ros_);
 }
