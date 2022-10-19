@@ -55,7 +55,8 @@ public:
    * @brief Constructor for nav2_controller::ControllerServer
    * @param options Additional options to control creation of the node.
    */
-  explicit ControllerServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+  explicit ControllerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+                            const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
   /**
    * @brief Destructor for nav2_controller::ControllerServer
    */

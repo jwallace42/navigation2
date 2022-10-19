@@ -39,13 +39,16 @@ using std::placeholders::_1;
 namespace nav2_planner
 {
 
-PlannerServer::PlannerServer(const rclcpp::NodeOptions & options)
+PlannerServer::PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+                             const rclcpp::NodeOptions & options)
 : nav2_util::LifecycleNode("planner_server", "", options),
   gp_loader_("nav2_core", "nav2_core::GlobalPlanner"),
   default_ids_{"GridBased"},
   default_types_{"nav2_navfn_planner/NavfnPlanner"},
   costmap_(nullptr)
 {
+  (void) costmap;
+
   RCLCPP_INFO(get_logger(), "Creating");
 
   // Declare this node's parameters
@@ -641,9 +644,9 @@ void PlannerServer::exceptionWarning(
 
 }  // namespace nav2_planner
 
-#include "rclcpp_components/register_node_macro.hpp"
+//#include "rclcpp_components/register_node_macro.hpp"
 
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(nav2_planner::PlannerServer)
+//RCLCPP_COMPONENTS_REGISTER_NODE(nav2_planner::PlannerServer)

@@ -23,9 +23,9 @@ include_directories(
 
 set(executable_name controller_server)
 
-add_executable(${executable_name}
-  src/main.cpp
-)
+#add_executable(${executable_name}
+#  src/main.cpp
+#)
 
 set(library_name ${executable_name}_core)
 
@@ -71,13 +71,13 @@ if(BUILD_TESTING)
   add_subdirectory(plugins/test)
 endif()
 
-ament_target_dependencies(${executable_name}
-  ${dependencies}
-)
+#ament_target_dependencies(${executable_name}
+#  ${dependencies}
+#)
 
-target_link_libraries(${executable_name} ${library_name})
+#target_link_libraries(${executable_name} ${library_name})
 
-rclcpp_components_register_nodes(${library_name} "nav2_controller::ControllerServer")
+#rclcpp_components_register_nodes(${library_name} "nav2_controller::ControllerServer")
 
 install(TARGETS simple_progress_checker simple_goal_checker stopped_goal_checker ${library_name}
   ARCHIVE DESTINATION lib
@@ -85,20 +85,20 @@ install(TARGETS simple_progress_checker simple_goal_checker stopped_goal_checker
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS ${executable_name}
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+#install(TARGETS ${executable_name}
+#  RUNTIME DESTINATION lib/${PROJECT_NAME}
+#)
 
 install(DIRECTORY include/
   DESTINATION include/
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-  add_subdirectory(test)
-endif()
+#if(BUILD_TESTING)
+#  find_package(ament_lint_auto REQUIRED)
+#  find_package(ament_cmake_gtest REQUIRED)
+#  ament_lint_auto_find_test_dependencies()
+#  add_subdirectory(test)
+#endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(simple_progress_checker

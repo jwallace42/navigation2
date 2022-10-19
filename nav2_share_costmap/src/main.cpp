@@ -8,8 +8,15 @@
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto planner_node = std::make_shared<nav2_planner::PlannerServer>();
-  auto controller_node = std::make_shared<nav2_controller::ControllerServer>();
+
+  // Create costmaps to be shared
+  auto global_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("global_costmap",
+      true);
+
+  auto local_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("local_costmap", true);
+
+  auto planner_node = std::make_shared<nav2_planner::PlannerServer>(global_costmap_ros_);
+  auto controller_node = std::make_shared<nav2_controller::ControllerServer>(local_costmap_ros_);
   auto behaviors_node = std::make_shared<behavior_server::BehaviorServer>();
 
   rclcpp::executors::SingleThreadedExecutor executor;

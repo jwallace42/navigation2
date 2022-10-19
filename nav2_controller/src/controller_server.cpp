@@ -33,7 +33,8 @@ using std::placeholders::_1;
 namespace nav2_controller
 {
 
-ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
+ControllerServer::ControllerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+                                   const rclcpp::NodeOptions & options)
 : nav2_util::LifecycleNode("controller_server", "", options),
   progress_checker_loader_("nav2_core", "nav2_core::ProgressChecker"),
   default_progress_checker_id_{"progress_checker"},
@@ -45,6 +46,8 @@ ControllerServer::ControllerServer(const rclcpp::NodeOptions & options)
   default_ids_{"FollowPath"},
   default_types_{"dwb_core::DWBLocalPlanner"}
 {
+
+  (void) costmap;
   RCLCPP_INFO(get_logger(), "Creating controller server");
 
   declare_parameter("controller_frequency", 20.0);
@@ -689,9 +692,9 @@ ControllerServer::dynamicParametersCallback(std::vector<rclcpp::Parameter> param
 
 }  // namespace nav2_controller
 
-#include "rclcpp_components/register_node_macro.hpp"
+//#include "rclcpp_components/register_node_macro.hpp"
 
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(nav2_controller::ControllerServer)
+//RCLCPP_COMPONENTS_REGISTER_NODE(nav2_controller::ControllerServer)

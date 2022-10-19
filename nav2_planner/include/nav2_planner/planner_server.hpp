@@ -55,7 +55,8 @@ public:
    * @brief A constructor for nav2_planner::PlannerServer
    * @param options Additional options to control creation of the node.
    */
-  explicit PlannerServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+  explicit PlannerServer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap,
+                         const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
   /**
    * @brief A destructor for nav2_planner::PlannerServer
    */
@@ -236,7 +237,7 @@ protected:
   std::vector<std::string> default_types_;
   std::vector<std::string> planner_ids_;
   std::vector<std::string> planner_types_;
-  double max_planner_duration_;
+  double max_planner_duration_{};
   std::string planner_ids_concat_;
 
   // Clock

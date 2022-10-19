@@ -54,17 +54,17 @@ ament_target_dependencies(${library_name}
   ${dependencies}
 )
 
-add_executable(${executable_name}
-  src/main.cpp
-)
+#add_executable(${executable_name}
+#  src/main.cpp
+#)
 
-target_link_libraries(${executable_name} ${library_name})
+#target_link_libraries(${executable_name} ${library_name})
 
-ament_target_dependencies(${executable_name}
-  ${dependencies}
-)
+#ament_target_dependencies(${executable_name}
+#  ${dependencies}
+#)
 
-rclcpp_components_register_nodes(${library_name} "nav2_planner::PlannerServer")
+#rclcpp_components_register_nodes(${library_name} "nav2_planner::PlannerServer")
 
 install(TARGETS ${library_name}
   ARCHIVE DESTINATION lib
@@ -72,20 +72,20 @@ install(TARGETS ${library_name}
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS ${executable_name}
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+#install(TARGETS ${executable_name}
+#  RUNTIME DESTINATION lib/${PROJECT_NAME}
+#)
 
 install(DIRECTORY include/
   DESTINATION include/
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-  add_subdirectory(test)
-endif()
+#if(BUILD_TESTING)
+#  find_package(ament_lint_auto REQUIRED)
+#  find_package(ament_cmake_gtest REQUIRED)
+#  ament_lint_auto_find_test_dependencies()
+#  add_subdirectory(test)
+#endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${library_name})
