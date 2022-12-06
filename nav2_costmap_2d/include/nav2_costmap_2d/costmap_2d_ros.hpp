@@ -47,6 +47,7 @@
 #include "nav2_costmap_2d/costmap_2d_publisher.hpp"
 #include "nav2_costmap_2d/footprint.hpp"
 #include "nav2_costmap_2d/clear_costmap_service.hpp"
+#include "nav2_costmap_2d/match_layer_service.hpp"
 #include "nav2_costmap_2d/layered_costmap.hpp"
 #include "nav2_costmap_2d/layer.hpp"
 #include "nav2_util/lifecycle_node.hpp"
@@ -385,6 +386,7 @@ protected:
   std::vector<geometry_msgs::msg::Point> padded_footprint_;
 
   std::unique_ptr<ClearCostmapService> clear_costmap_service_;
+  std::unique_ptr<MatchLayerService> match_layer_service_;
 
   // Dynamic parameters handler
   OnSetParametersCallbackHandle::SharedPtr dyn_params_handler;

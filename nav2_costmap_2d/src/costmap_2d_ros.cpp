@@ -235,6 +235,7 @@ Costmap2DROS::on_configure(const rclcpp_lifecycle::State & /*state*/)
 
   // Add cleaning service
   clear_costmap_service_ = std::make_unique<ClearCostmapService>(shared_from_this(), *this);
+  match_layer_service_ = std::make_unique<MatchLayerService>(shared_from_this(), *this);
 
   executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   executor_->add_callback_group(callback_group_, get_node_base_interface());
@@ -322,6 +323,7 @@ Costmap2DROS::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
 
   costmap_publisher_.reset();
   clear_costmap_service_.reset();
+  match_layer_service_.reset();
 
   for (auto & layer_pub : layer_publishers_) {
     layer_pub.reset();

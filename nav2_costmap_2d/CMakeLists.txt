@@ -51,6 +51,7 @@ add_library(nav2_costmap_2d_core SHARED
   src/clear_costmap_service.cpp
   src/footprint_collision_checker.cpp
   plugins/costmap_filters/costmap_filter.cpp
+  src/match_layer_service.cpp
 )
 
 set(dependencies

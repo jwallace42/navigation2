@@ -1,0 +1,9 @@
+# Service message to match costmap layers
+
+# Request
+string destination_layer
+string source_layer
+---
+# Response
+uint16 successful_updates
+uint16 failed_updates
