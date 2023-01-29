@@ -144,9 +144,9 @@ struct Node
   Metadata metadata;         // Any metadata stored in the graph file of interest
   SearchState search_state;  // State maintained by route search algorithm
 
-  void addEdge(EdgeCost & cost, NodePtr node, unsigned int edgeid)
+  void addEdge(EdgeCost & cost, NodePtr node, unsigned int edgeid, Metadata &meta_data)
   {
-    neighbors.push_back({edgeid, this, node, cost, {}});
+    neighbors.push_back({edgeid, this, node, cost, meta_data});
   }
 };
 

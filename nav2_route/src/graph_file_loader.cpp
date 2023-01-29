@@ -80,15 +80,16 @@ bool GraphFileLoader::loadGraphFromFile(Graph & graph, GraphToIDMap & idx_map, s
   }
 
   EdgeCost default_cost;
+  Metadata metadata;
   // Creates bidirectional routs from 0-1-4-5 & directional only route from 0-3-6
-  graph[0].addEdge(default_cost, &graph[1], ids++);
-  graph[1].addEdge(default_cost, &graph[0], ids++);
-  graph[4].addEdge(default_cost, &graph[1], ids++);
-  graph[1].addEdge(default_cost, &graph[4], ids++);
-  graph[5].addEdge(default_cost, &graph[4], ids++);
-  graph[4].addEdge(default_cost, &graph[5], ids++);
-  graph[0].addEdge(default_cost, &graph[3], ids++);
-  graph[3].addEdge(default_cost, &graph[6], ids++);
+  graph[0].addEdge(default_cost, &graph[1], ids++, metadata);
+  graph[1].addEdge(default_cost, &graph[0], ids++, metadata);
+  graph[4].addEdge(default_cost, &graph[1], ids++, metadata);
+  graph[1].addEdge(default_cost, &graph[4], ids++, metadata);
+  graph[5].addEdge(default_cost, &graph[4], ids++, metadata);
+  graph[4].addEdge(default_cost, &graph[5], ids++, metadata);
+  graph[0].addEdge(default_cost, &graph[3], ids++, metadata);
+  graph[3].addEdge(default_cost, &graph[6], ids++, metadata);
   return true;
 }
 
