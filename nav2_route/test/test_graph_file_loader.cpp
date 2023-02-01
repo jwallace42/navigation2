@@ -40,6 +40,11 @@ void getEdges(const json & features, std::vector<nlohmann::json> & edges)
   }
 }
 
+//nav2_route::Metadata addMetaData(const nlohmann::json &meta_data)
+//{
+//
+//}
+
 void addNodesToGraph(nav2_route::Graph & graph, std::vector<nlohmann::json> & nodes)
 {
   for (const auto & node : nodes) {
@@ -52,6 +57,9 @@ void addNodesToGraph(nav2_route::Graph & graph, std::vector<nlohmann::json> & no
     graph[id].coords.x = x;
     graph[id].coords.y = y;
     graph[id].coords.frame_id = frame;
+
+    // Meta data
+
   }
 }
 
@@ -78,17 +86,14 @@ void addEdgesToGraph(nav2_route::Graph & graph, std::vector<nlohmann::json> & ed
 
     // Meta data
     nav2_route::Metadata meta_data;
-    if ( edge_properties.contains("speed_limit"))
+    if ( edge_properties.contains("meta_data"))
     {
-      // Meta data getter is broken
-      std::cout << "Found_speed_limit" << std::endl;
-      const std::string key = "speed_limit";
-      float value = edge_properties["speed_limit"];
-      std::cout << "Set Value: " << value << std::endl;
-      meta_data.setValue(key, value);
-      float speed = 0;
-      meta_data.getValue(key, speed);
-      std::cout << "Got Value: " << speed << std::endl;
+      json json_meta_data = edge_properties["meta_data"];
+      for (auto& [key, val] : json_meta_data.items())
+      {
+        std::cout << val.dump() << std::endl;
+        meta_data.setValue(key, val);
+      }
     }
     graph[start_id].addEdge(edge_cost, &graph[end_id], id, meta_data);
   }

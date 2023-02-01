@@ -12,13 +12,13 @@
 { "type": "Feature", "properties": { "id": 6, "frame": "map" }, "geometry": { "type": "Point", "coordinates": [ 2.0, 0.0 ] } },
 { "type": "Feature", "properties": { "id": 7, "frame": "map" }, "geometry": { "type": "Point", "coordinates": [ 2.0, 1.0 ] } },
 { "type": "Feature", "properties": { "id": 8, "frame": "map" }, "geometry": { "type": "Point", "coordinates": [ 2.0, 2.0 ] } },
-{ "type": "Feature", "properties": { "id":  9, "startid": 0, "endid": 1, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 0.0 ], [ 0.0, 1.0 ] ] } },
-{ "type": "Feature", "properties": { "id": 10, "startid": 1, "endid": 0, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 0.0, 0.0 ] ] } },
-{ "type": "Feature", "properties": { "id": 11, "startid": 1, "endid": 4, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 1.0, 1.0] ] } },
-{ "type": "Feature", "properties": { "id": 12, "startid": 4, "endid": 1, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 1.0 ], [ 0.0, 1.0 ] ] } },
-{ "type": "Feature", "properties": { "id": 12, "startid": 4, "endid": 5, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 1.0], [ 1.0, 2.0 ] ] } },
-{ "type": "Feature", "properties": { "id": 13, "startid": 5, "endid": 4, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 2.0 ], [ 1.0, 1.0] ] } },
-{ "type": "Feature", "properties": { "id": 14, "startid": 0, "endid": 3, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 0.0 ], [ 0.0, 1.0 ] ] } },
-{ "type": "Feature", "properties": { "id": 15, "startid": 3, "endid": 6, "cost": 6, "speed_limit": 0.85 }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 2.0, 0.0 ] ] } }
+{ "type": "Feature", "properties": { "id":  9, "startid": 0, "endid": 1, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 0.0 ], [ 0.0, 1.0 ] ] } },
+{ "type": "Feature", "properties": { "id": 10, "startid": 1, "endid": 0, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 0.0, 0.0 ] ] } },
+{ "type": "Feature", "properties": { "id": 11, "startid": 1, "endid": 4, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 1.0, 1.0] ] } },
+{ "type": "Feature", "properties": { "id": 12, "startid": 4, "endid": 1, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 1.0 ], [ 0.0, 1.0 ] ] } },
+{ "type": "Feature", "properties": { "id": 12, "startid": 4, "endid": 5, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 1.0], [ 1.0, 2.0 ] ] } },
+{ "type": "Feature", "properties": { "id": 13, "startid": 5, "endid": 4, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 1.0, 2.0 ], [ 1.0, 1.0] ] } },
+{ "type": "Feature", "properties": { "id": 14, "startid": 0, "endid": 3, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 0.0 ], [ 0.0, 1.0 ] ] } },
+{ "type": "Feature", "properties": { "id": 15, "startid": 3, "endid": 6, "cost": 6, "meta_data": {"speed_limit": 0.85}  }, "geometry": { "type": "LineString", "coordinates": [ [ 0.0, 1.0 ], [ 2.0, 0.0 ] ] } }
 ]
 }
