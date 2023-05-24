@@ -29,6 +29,7 @@
 #include "nav2_route/types.hpp"
 #include "nav2_route/utils.hpp"
 #include "nav2_route/node_spatial_tree.hpp"
+#include "nav2_route/node_visible_checker.hpp"
 
 namespace nav2_route
 {
@@ -113,6 +114,7 @@ public:
 protected:
   rclcpp::Logger logger_{rclcpp::get_logger("GoalIntentExtractor")};
   std::shared_ptr<NodeSpatialTree> node_spatial_tree_;
+  std::shared_ptr<NodeVisibleChecker> node_visible_checker_;
   GraphToIDMap * id_to_graph_map_;
   Graph * graph_;
   std::shared_ptr<tf2_ros::Buffer> tf_;

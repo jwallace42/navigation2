@@ -67,6 +67,7 @@ bool GraphLoader::loadGraphFromFile(
   GraphToIDMap & graph_to_id_map,
   std::string filepath)
 {
+  filepath = "/home/josh/nav2_ws/src/navigation2/nav2_route/graphs/aws_graph.geojson";
   if (filepath.empty() && !graph_filepath_.empty()) {
     RCLCPP_DEBUG(
       logger_, "The graph filepath was not provided. "
@@ -74,6 +75,7 @@ bool GraphLoader::loadGraphFromFile(
     filepath = graph_filepath_;
   } else if (filepath.empty() && graph_filepath_.empty()) {
     // No graph to try to load
+    RCLCPP_INFO(logger_, "No graph to try to load");
     return true;
   }
 

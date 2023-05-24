@@ -54,6 +54,7 @@ add_library(${library_name} SHARED
   src/path_converter.cpp
   src/graph_loader.cpp
   src/goal_intent_extractor.cpp
+    src/node_visible_checker.cpp
 )
 
 ament_target_dependencies(${library_name}

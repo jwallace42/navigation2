@@ -39,6 +39,8 @@ void GoalIntentExtractor::configure(
   base_frame_ = base_frame;
   node_spatial_tree_ = std::make_shared<NodeSpatialTree>();
   node_spatial_tree_->computeTree(graph);
+  node_visible_checker_ = std::make_shared<NodeVisibleChecker>(node, "global_costmap/costmap_raw");
+
 
   nav2_util::declare_parameter_if_not_declared(
     node, "prune_goal", rclcpp::ParameterValue(true));
@@ -120,6 +122,17 @@ GoalIntentExtractor::findStartandGoal(const std::shared_ptr<const GoalT> goal)
   {
     throw nav2_core::IndeterminantNodesOnGraph(
             "Could not determine node closest to start or goal pose requested!");
+  }
+
+  // Convert to node coords to poseStamped
+  geometry_msgs::msg::PoseStamped node_stamped;
+  auto coords = graph_->at(start_route).coords;
+  node_stamped.pose.position.x = coords.x;
+  node_stamped.pose.position.y = coords.y;
+  node_stamped.header.frame_id = coords.frame_id;
+
+  if (node_visible_checker_->isNodeValid(node_stamped, start_)) {
+    RCLCPP_WARN(logger_, "Start node is not visible from the current position");
   }
 
   return {start_route, end_route};
