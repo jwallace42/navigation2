@@ -132,7 +132,7 @@ GoalIntentExtractor::findStartandGoal(const std::shared_ptr<const GoalT> goal)
   node_stamped.header.frame_id = coords.frame_id;
 
   if (node_visible_checker_->isNodeValid(node_stamped, start_)) {
-    RCLCPP_WARN(logger_, "Start node is not visible from the current position");
+    RCLCPP_WARN(logger_, "Start node is Visible from the current position");
   }
 
   return {start_route, end_route};
