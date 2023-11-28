@@ -39,6 +39,7 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "nav2_core/global_planner.hpp"
 #include "nav2_msgs/srv/is_path_valid.hpp"
+#include "nav2_costmap_2d/footprint_collision_checker.hpp"
 #include "nav2_core/planner_exceptions.hpp"
 
 namespace nav2_planner
@@ -251,12 +252,15 @@ protected:
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<nav2_util::NodeThread> costmap_thread_;
   nav2_costmap_2d::Costmap2D * costmap_;
+  std::unique_ptr<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D *>> collision_checker_;
 
   // Publishers for the path
   rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr plan_publisher_;
 
   // Service to determine if the path is valid
   rclcpp::Service<nav2_msgs::srv::IsPathValid>::SharedPtr is_path_valid_service_;
+  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PolygonStamped>::SharedPtr failed_footprint_;
+  bool is_path_valid_check_footprint_;
 };
 
 }  // namespace nav2_planner
