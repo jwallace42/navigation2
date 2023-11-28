@@ -88,8 +88,9 @@ PlannerServer::on_configure(const rclcpp_lifecycle::State & /*state*/)
 
   costmap_ros_->configure();
   costmap_ = costmap_ros_->getCostmap();
-  collision_checker_ = 
-    std::make_unique<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D *>>(costmap_);
+  collision_checker_ =
+    std::make_unique<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D *>>(
+    costmap_);
 
   // Launch a thread to run the costmap node
   costmap_thread_ = std::make_unique<nav2_util::NodeThread>(costmap_ros_);
@@ -668,7 +669,7 @@ void PlannerServer::isPathValid(
     nav2_costmap_2d::Footprint footprint;
 
     if (is_path_valid_check_footprint_) {
-        footprint = costmap_ros_->getRobotFootprint();
+      footprint = costmap_ros_->getRobotFootprint();
     }
 
     // Visualize the first polygon on the path
@@ -679,7 +680,7 @@ void PlannerServer::isPathValid(
       if (is_path_valid_check_footprint_) {
         costmap_ros_->getRobotFootprint();
         cost = static_cast<unsigned int>(collision_checker_->footprintCostAtPose(
-          position.x, position.y, theta, footprint));
+            position.x, position.y, theta, footprint));
       } else {
         costmap_->worldToMap(
           position.x,
@@ -688,13 +689,12 @@ void PlannerServer::isPathValid(
       }
 
       if (!is_path_valid_check_footprint_ &&
-          (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
-          cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
+        (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
+        cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
       {
         response->is_valid = false;
         break;
-      } else if(cost == nav2_costmap_2d::LETHAL_OBSTACLE) {
-
+      } else if (cost == nav2_costmap_2d::LETHAL_OBSTACLE) {
         // Vizualize the polygon that caused the failure
         double cos_th = cos(theta);
         double sin_th = sin(theta);
