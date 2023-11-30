@@ -262,7 +262,6 @@ protected:
   rclcpp::Service<nav2_msgs::srv::IsPathValid>::SharedPtr is_path_valid_service_;
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PolygonStamped>::SharedPtr
     failed_footprint_;
-  bool is_path_valid_check_footprint_;
 };
 
 }  // namespace nav2_planner

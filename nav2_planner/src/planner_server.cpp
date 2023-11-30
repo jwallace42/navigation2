@@ -52,8 +52,6 @@ PlannerServer::PlannerServer(const rclcpp::NodeOptions & options)
   // Declare this node's parameters
   declare_parameter("planner_plugins", default_ids_);
   declare_parameter("expected_planner_frequency", 1.0);
-  declare_parameter("is_path_valid_check_footprnt", rclcpp::ParameterValue(false));
-
   declare_parameter("action_server_result_timeout", 10.0);
 
   get_parameter("planner_plugins", planner_ids_);
@@ -63,7 +61,6 @@ PlannerServer::PlannerServer(const rclcpp::NodeOptions & options)
     }
   }
 
-  get_parameter("is_path_valid_check_footprint", is_path_valid_check_footprint_);
 
   // Setup the global costmap
   costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>(
@@ -668,7 +665,9 @@ void PlannerServer::isPathValid(
     unsigned int my = 0;
     nav2_costmap_2d::Footprint footprint;
 
-    if (is_path_valid_check_footprint_) {
+    bool use_radius = costmap_ros_->getUseRadius();
+
+    if (use_radius) {
       footprint = costmap_ros_->getRobotFootprint();
     }
 
@@ -677,7 +676,7 @@ void PlannerServer::isPathValid(
     for (unsigned int i = closest_point_index; i < request->path.poses.size(); ++i) {
       auto & position = request->path.poses[i].pose.position;
       auto theta = tf2::getYaw(request->path.poses[i].pose.orientation);
-      if (is_path_valid_check_footprint_) {
+      if (use_radius) {
         costmap_ros_->getRobotFootprint();
         cost = static_cast<unsigned int>(collision_checker_->footprintCostAtPose(
             position.x, position.y, theta, footprint));
@@ -688,7 +687,7 @@ void PlannerServer::isPathValid(
         cost = costmap_->getCost(mx, my);
       }
 
-      if (!is_path_valid_check_footprint_ &&
+      if (!use_radius &&
         (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
         cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
       {
