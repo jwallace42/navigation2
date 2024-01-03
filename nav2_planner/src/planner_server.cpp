@@ -61,7 +61,6 @@ PlannerServer::PlannerServer(const rclcpp::NodeOptions & options)
     }
   }
 
-
   // Setup the global costmap
   costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>(
     "global_costmap", std::string{get_namespace()}, "global_costmap",
@@ -85,9 +84,12 @@ PlannerServer::on_configure(const rclcpp_lifecycle::State & /*state*/)
 
   costmap_ros_->configure();
   costmap_ = costmap_ros_->getCostmap();
-  collision_checker_ =
-    std::make_unique<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D *>>(
-    costmap_);
+
+  if (!costmap_ros_->getUseRadius()) {
+    collision_checker_ =
+      std::make_unique<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D *>>(
+      costmap_);
+  }
 
   // Launch a thread to run the costmap node
   costmap_thread_ = std::make_unique<nav2_util::NodeThread>(costmap_ros_);
@@ -143,7 +145,6 @@ PlannerServer::on_configure(const rclcpp_lifecycle::State & /*state*/)
 
   // Initialize pubs & subs
   plan_publisher_ = create_publisher<nav_msgs::msg::Path>("plan", 1);
-  failed_footprint_ = create_publisher<geometry_msgs::msg::PolygonStamped>("failed_footprint", 1);
 
   double action_server_result_timeout;
   get_parameter("action_server_result_timeout", action_server_result_timeout);
@@ -176,7 +177,6 @@ PlannerServer::on_activate(const rclcpp_lifecycle::State & /*state*/)
   RCLCPP_INFO(get_logger(), "Activating");
 
   plan_publisher_->on_activate();
-  failed_footprint_->on_activate();
   action_server_pose_->activate();
   action_server_poses_->activate();
   const auto costmap_ros_state = costmap_ros_->activate();
@@ -215,7 +215,6 @@ PlannerServer::on_deactivate(const rclcpp_lifecycle::State & /*state*/)
   action_server_pose_->deactivate();
   action_server_poses_->deactivate();
   plan_publisher_->on_deactivate();
-  failed_footprint_->on_deactivate();
 
   /*
    * The costmap is also a lifecycle node, so it may have already fired on_deactivate
@@ -247,7 +246,6 @@ PlannerServer::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
   action_server_pose_.reset();
   action_server_poses_.reset();
   plan_publisher_.reset();
-  failed_footprint_.reset();
   tf_.reset();
 
   costmap_ros_->cleanup();
@@ -651,58 +649,33 @@ void PlannerServer::isPathValid(
     std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
     unsigned int mx = 0;
     unsigned int my = 0;
-    nav2_costmap_2d::Footprint footprint;
 
     bool use_radius = costmap_ros_->getUseRadius();
-
-    if (use_radius) {
-      footprint = costmap_ros_->getRobotFootprint();
-    }
 
     // Visualize the first polygon on the path
     unsigned int cost = nav2_costmap_2d::FREE_SPACE;
     for (unsigned int i = closest_point_index; i < request->path.poses.size(); ++i) {
       auto & position = request->path.poses[i].pose.position;
-      auto theta = tf2::getYaw(request->path.poses[i].pose.orientation);
       if (use_radius) {
-        costmap_ros_->getRobotFootprint();
+        if (costmap_->worldToMap(position.x, position.y, mx, my)) {
+          cost = costmap_->getCost(mx, my);
+        } else {
+          cost = nav2_costmap_2d::LETHAL_OBSTACLE;
+        }
+      } else {
+        nav2_costmap_2d::Footprint footprint = costmap_ros_->getRobotFootprint();
+        auto theta = tf2::getYaw(request->path.poses[i].pose.orientation);
         cost = static_cast<unsigned int>(collision_checker_->footprintCostAtPose(
             position.x, position.y, theta, footprint));
-      } else {
-        costmap_->worldToMap(
-          position.x,
-          position.y, mx, my);
-        cost = costmap_->getCost(mx, my);
       }
 
-      if (!use_radius &&
+      if (use_radius &&
         (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
         cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
       {
         response->is_valid = false;
         break;
       } else if (cost == nav2_costmap_2d::LETHAL_OBSTACLE) {
-        // Vizualize the polygon that caused the failure
-        double cos_th = cos(theta);
-        double sin_th = sin(theta);
-        nav2_costmap_2d::Footprint oriented_footprint;
-        for (unsigned int j = 0; j < footprint.size(); ++j) {
-          geometry_msgs::msg::Point new_pt;
-          new_pt.x = position.x + (footprint[j].x * cos_th - footprint[j].y * sin_th);
-          new_pt.y = position.y + (footprint[j].x * sin_th + footprint[j].y * cos_th);
-          oriented_footprint.push_back(new_pt);
-        }
-
-        geometry_msgs::msg::PolygonStamped stamped_footprint_;
-        for (const auto point : oriented_footprint) {
-          geometry_msgs::msg::Point32 point_msg;
-          point_msg.x = point.x;
-          point_msg.y = point.y;
-          stamped_footprint_.polygon.points.push_back(point_msg);
-        }
-        stamped_footprint_.header.frame_id = "map";
-        failed_footprint_->publish(stamped_footprint_);
-
         response->is_valid = false;
         break;
       }
