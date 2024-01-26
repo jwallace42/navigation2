@@ -63,7 +63,6 @@ struct SmootherParams
    * @brief A constructor for nav2_smac_planner::SmootherParams
    */
   SmootherParams()
-  : holonomic_(false)
   {
   }
 
@@ -95,6 +94,9 @@ struct SmootherParams
     nav2_util::declare_parameter_if_not_declared(
       node, local_name + "refinement_num", rclcpp::ParameterValue(2));
     node->get_parameter(local_name + "refinement_num", refinement_num_);
+    nav2_util::declare_parameter_if_not_declared(
+      node, local_name + "holonomic", rclcpp::ParameterValue(false));
+    node->get_parameter(local_name + "holonomic", holonomic_);
   }
 
   double tolerance_;
